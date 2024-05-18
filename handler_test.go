@@ -16,12 +16,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var httpClient *http.Client
+
+func init() {
+	httpClient = &http.Client{
+		Transport: &http.Transport{},
+		Timeout:   10 * time.Second,
+	}
+}
+
 func Test_Get(t *testing.T) {
 
-	type httpBinResponse struct {
-		URL   string     `json:"url"`
-		Args  url.Values `json:"args"`
-		Error string     `json:"error"`
+	type bulbResponse struct {
+		URL  string     `json:"url"`
+		Args url.Values `json:"args"`
 	}
 
 	handleFunc := NewRouter()
@@ -32,14 +40,9 @@ func Test_Get(t *testing.T) {
 
 	// Create an http client with a proxy
 
-	httpClient := &http.Client{
-		Transport: &http.Transport{},
-		Timeout:   10 * time.Second,
-	}
+	testUrl := fmt.Sprintf("%s/get?k=v", testServer.URL)
 
-	testGETUrl := fmt.Sprintf("%s/get?k=v", testServer.URL)
-
-	req, err := http.NewRequest("GET", testGETUrl, nil)
+	req, err := http.NewRequest("GET", testUrl, nil)
 	assert.NoError(t, err)
 
 	resp, err := httpClient.Do(req)
@@ -52,28 +55,45 @@ func Test_Get(t *testing.T) {
 	body, err := io.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	// in this case we require either a result or a response
-	result := new(httpBinResponse)
+	result := new(bulbResponse)
 
 	err = json.Unmarshal(body, result)
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "", result.Error)
-
 	// ensure that result has the expected value
-	assert.Equal(t, testGETUrl, result.URL)
+	assert.Equal(t, testUrl, result.URL)
 
 	expectedArgs := url.Values{"k": []string{"v"}}
 
 	assert.Equal(t, expectedArgs, result.Args)
 }
 
-func Test_PostForm(t *testing.T) {
+func Test_MethodNotAllowed(t *testing.T) {
 
-	type httpBinResponse struct {
-		URL   string     `json:"url"`
-		Form  url.Values `json:"form"`
-		Error string     `json:"error"`
+	handleFunc := NewRouter()
+	testServer := httptest.NewServer(handleFunc)
+
+	defer testServer.Close()
+
+	// Create an http client with a proxy
+
+	testUrl := fmt.Sprintf("%s/get?k=v", testServer.URL)
+
+	req, err := http.NewRequest("POST", testUrl, nil)
+	assert.NoError(t, err)
+
+	resp, err := httpClient.Do(req)
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusMethodNotAllowed, resp.StatusCode)
+}
+
+func Test_Form(t *testing.T) {
+
+	type bulbResponse struct {
+		URL  string     `json:"url"`
+		Form url.Values `json:"form"`
 	}
 
 	handleFunc := NewRouter()
@@ -82,52 +102,42 @@ func Test_PostForm(t *testing.T) {
 
 	defer testServer.Close()
 
-	// Create an http client with a proxy
+	methods := []string{"post", "put", "patch"}
 
-	httpClient := &http.Client{
-		Transport: &http.Transport{},
-		Timeout:   10 * time.Second,
+	for _, method := range methods {
+		testURL := fmt.Sprintf("%s/%s", testServer.URL, method)
+
+		req, err := http.NewRequest(strings.ToUpper(method), testURL, strings.NewReader("k=v"))
+		assert.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+		resp, err := httpClient.Do(req)
+		assert.NoError(t, err)
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		assert.NoError(t, err)
+		// in this case we require either a result or a response
+		result := new(bulbResponse)
+
+		json.Unmarshal(body, result)
+		// ensure that result has the expected value
+		assert.Equal(t, testURL, result.URL)
+
+		expectedForm := url.Values{"k": []string{"v"}}
+
+		assert.Equal(t, expectedForm, result.Form)
 	}
-
-	testURL := fmt.Sprintf("%s/post", testServer.URL)
-
-	req, err := http.NewRequest("POST", testURL, strings.NewReader("k=v"))
-	assert.NoError(t, err)
-
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, err := httpClient.Do(req)
-	assert.NoError(t, err)
-
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	assert.NoError(t, err)
-	// in this case we require either a result or a response
-	result := new(httpBinResponse)
-
-	err = json.Unmarshal(body, result)
-
-	assert.NoError(t, err)
-
-	assert.Equal(t, "", result.Error)
-
-	// ensure that result has the expected value
-	assert.Equal(t, testURL, result.URL)
-
-	expectedForm := url.Values{"k": []string{"v"}}
-
-	assert.Equal(t, expectedForm, result.Form)
 
 }
 
 func Test_PostMultipart(t *testing.T) {
 
-	type httpBinResponse struct {
+	type bulbResponse struct {
 		URL   string              `json:"url"`
 		Form  url.Values          `json:"form"`
 		Files map[string][]string `json:"files"`
-		Error string              `json:"error"`
 	}
 
 	handleFunc := NewRouter()
@@ -135,13 +145,6 @@ func Test_PostMultipart(t *testing.T) {
 	testServer := httptest.NewServer(handleFunc)
 
 	defer testServer.Close()
-
-	// Create an http client with a proxy
-
-	httpClient := &http.Client{
-		Transport: &http.Transport{},
-		Timeout:   10 * time.Second,
-	}
 
 	testURL := fmt.Sprintf("%s/post", testServer.URL)
 
@@ -149,13 +152,10 @@ func Test_PostMultipart(t *testing.T) {
 	w := multipart.NewWriter(buf)
 	part, err := w.CreateFormFile("file", "file.txt")
 	assert.NoError(t, err)
-
 	_, err = part.Write([]byte("file content"))
 	assert.NoError(t, err)
-
 	err = w.WriteField("k", "v")
 	assert.NoError(t, err)
-
 	assert.NoError(t, w.Close())
 
 	req, err := http.NewRequest("POST", testURL, buf)
@@ -171,13 +171,11 @@ func Test_PostMultipart(t *testing.T) {
 	body, err := io.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	// in this case we require either a result or a response
-	result := new(httpBinResponse)
+	result := new(bulbResponse)
 
 	err = json.Unmarshal(body, result)
 
 	assert.NoError(t, err)
-
-	assert.Equal(t, "", result.Error)
 
 	// ensure that result has the expected value
 	assert.Equal(t, testURL, result.URL)
@@ -189,4 +187,38 @@ func Test_PostMultipart(t *testing.T) {
 	expectedFiles := map[string][]string{"file": {"file content"}}
 	assert.Equal(t, expectedFiles, result.Files)
 
+}
+
+func Test_Delete(t *testing.T) {
+
+	type bulbResponse struct {
+		URL  string     `json:"url"`
+		Args url.Values `json:"args"`
+	}
+
+	handleFunc := NewRouter()
+	// Start a test server that will act as a proxy
+	testServer := httptest.NewServer(handleFunc)
+
+	defer testServer.Close()
+
+	// Create an http client with a proxy
+
+	testUrl := fmt.Sprintf("%s/delete?id=1", testServer.URL)
+
+	req, err := http.NewRequest("DELETE", testUrl, nil)
+	assert.NoError(t, err)
+
+	resp, err := httpClient.Do(req)
+	assert.NoError(t, err)
+
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	result := new(bulbResponse)
+	json.Unmarshal(body, result)
+
+	expectedArgs := url.Values{"id": []string{"1"}}
+
+	assert.Equal(t, expectedArgs, result.Args)
 }

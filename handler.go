@@ -60,12 +60,12 @@ func methodsHandle(w http.ResponseWriter, r *http.Request) {
 							JsonError(w, err.Error(), http.StatusInternalServerError)
 							return
 						}
-						fbody, err := io.ReadAll(file)
+						fBody, err := io.ReadAll(file)
 						if err != nil {
 							JsonError(w, err.Error(), http.StatusInternalServerError)
 							return
 						}
-						files[k] = append(files[k], string(fbody))
+						files[k] = append(files[k], string(fBody))
 					}
 				}
 				response.Files = files
