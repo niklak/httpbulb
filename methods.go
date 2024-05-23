@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func methodsHandle(w http.ResponseWriter, r *http.Request) {
+func MethodsHandle(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: add json support
 

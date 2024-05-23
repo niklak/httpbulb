@@ -222,3 +222,57 @@ func Test_Delete(t *testing.T) {
 
 	assert.Equal(t, expectedArgs, result.Args)
 }
+
+func Test_Anything(t *testing.T) {
+
+	type bulbResponse struct {
+		URL string `json:"url"`
+	}
+
+	handleFunc := NewRouter()
+	testServer := httptest.NewServer(handleFunc)
+
+	defer testServer.Close()
+
+	testUrl := fmt.Sprintf("%s/anything?k=v", testServer.URL)
+
+	req, err := http.NewRequest("GET", testUrl, nil)
+	assert.NoError(t, err)
+
+	resp, err := httpClient.Do(req)
+	assert.NoError(t, err)
+
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	result := new(bulbResponse)
+	json.Unmarshal(body, result)
+
+	assert.Equal(t, testUrl, result.URL)
+}
+
+func Test_AnythingAnything(t *testing.T) {
+	type bulbResponse struct {
+		URL string `json:"url"`
+	}
+
+	handleFunc := NewRouter()
+	testServer := httptest.NewServer(handleFunc)
+
+	defer testServer.Close()
+
+	testUrl := fmt.Sprintf("%s/anything/something?k=v", testServer.URL)
+
+	req, err := http.NewRequest("GET", testUrl, nil)
+	assert.NoError(t, err)
+
+	resp, err := httpClient.Do(req)
+	assert.NoError(t, err)
+
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	result := new(bulbResponse)
+	json.Unmarshal(body, result)
+	assert.Equal(t, testUrl, result.URL)
+}

@@ -23,5 +23,5 @@ func statusCodeHandle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(map[string]string{"status_text": http.StatusText(statusCode)})
+	json.NewEncoder(w).Encode(StatusResponse{StatusText: http.StatusText(statusCode)})
 }
