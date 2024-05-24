@@ -3,21 +3,16 @@ package httpbulb
 import (
 	"encoding/json"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"strings"
 )
 
-func MethodsHandle(w http.ResponseWriter, r *http.Request) {
-
+func newMethodResponse(r *http.Request) (response MethodsResponse, err error) {
 	// TODO: add json support
 
-	defer r.Body.Close()
-
-	var err error
-
 	var body []byte
-
-	response := MethodsResponse{
+	response = MethodsResponse{
 		Args:    r.URL.Query(),
 		Headers: r.Header,
 		Origin:  r.RemoteAddr,
@@ -28,7 +23,6 @@ func MethodsHandle(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost, http.MethodPut, http.MethodPatch:
 		if strings.HasPrefix(ct, "multipart/form-data") {
 			if err = r.ParseMultipartForm(64 << 20); err != nil {
-				JsonError(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
@@ -36,14 +30,14 @@ func MethodsHandle(w http.ResponseWriter, r *http.Request) {
 				files := make(map[string][]string)
 				for k, f := range r.MultipartForm.File {
 					for _, fileHeader := range f {
-						file, err := fileHeader.Open()
-						if err != nil {
-							JsonError(w, err.Error(), http.StatusInternalServerError)
+						var file multipart.File
+
+						if file, err = fileHeader.Open(); err != nil {
 							return
 						}
-						fBody, err := io.ReadAll(file)
-						if err != nil {
-							JsonError(w, err.Error(), http.StatusInternalServerError)
+						var fBody []byte
+
+						if fBody, err = io.ReadAll(file); err != nil {
 							return
 						}
 						files[k] = append(files[k], string(fBody))
@@ -55,14 +49,12 @@ func MethodsHandle(w http.ResponseWriter, r *http.Request) {
 			}
 		} else if ct == "application/x-www-form-urlencoded" {
 			if err = r.ParseForm(); err != nil {
-				JsonError(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 			response.Form = r.Form
 		} else {
 			body, err = io.ReadAll(r.Body)
 			if err != nil {
-				JsonError(w, "Failed to read request body", http.StatusInternalServerError)
 				return
 			}
 			response.Data = string(body)
@@ -70,6 +62,18 @@ func MethodsHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.JSON = nil
+	return
+}
+
+func MethodsHandle(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	response, err := newMethodResponse(r)
+	if err != nil {
+		JsonError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

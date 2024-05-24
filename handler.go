@@ -17,7 +17,10 @@ func NewRouter() *chi.Mux {
 	r.Get("/headers", http.HandlerFunc(HeadersHandle))
 	r.Get("/ip", http.HandlerFunc(IpHandle))
 	r.Get("/user-agent", http.HandlerFunc(UserAgentHandle))
+
 	r.Get("/robots.txt", http.HandlerFunc(RobotsHandle))
+
+	r.Get("/gzip", http.HandlerFunc(GzipHandle))
 
 	// TODO: add a handler that accepts a sequence of status codes
 	// and returns a random status code from it.
