@@ -9,6 +9,7 @@ import (
 func HeadersHandle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(HeadersResponse{Headers: r.Header})
 }
 
@@ -22,11 +23,13 @@ func IpHandle(w http.ResponseWriter, r *http.Request) {
 	} else {
 		ip = r.RemoteAddr
 	}
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(IpResponse{Origin: ip})
 }
 
 func UserAgentHandle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(UserAgentResponse{UserAgent: r.UserAgent()})
 }
