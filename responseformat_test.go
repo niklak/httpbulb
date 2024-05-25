@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/andybalholm/brotli"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -85,6 +86,35 @@ func (s *ResponseFormatSuite) TestDeflate() {
 	err = json.Unmarshal(body, result)
 	assert.NoError(s.T(), err)
 	assert.True(s.T(), result.Deflated)
+
+}
+
+func (s *ResponseFormatSuite) TestBrotli() {
+
+	// response will be automatically uncompressed by the http client,
+	// since the transport does't specify `DisableCompression: true`
+	type serverResponse struct {
+		Brotli bool `json:"brotli"`
+	}
+
+	req, err := http.NewRequest("GET", s.testServer.URL+"/brotli", nil)
+	assert.NoError(s.T(), err)
+
+	resp, err := s.client.Do(req)
+	assert.NoError(s.T(), err)
+	defer resp.Body.Close()
+
+	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	result := &serverResponse{}
+
+	reader := brotli.NewReader(resp.Body)
+
+	body, err := io.ReadAll(reader)
+	assert.NoError(s.T(), err)
+
+	err = json.Unmarshal(body, result)
+	assert.NoError(s.T(), err)
+	assert.True(s.T(), result.Brotli)
 
 }
 

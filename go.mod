@@ -3,6 +3,7 @@ module github.com/niklak/httpbulb
 go 1.22.1
 
 require (
+	github.com/andybalholm/brotli v1.1.0
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/stretchr/testify v1.9.0
 )
