@@ -47,3 +47,9 @@ type IpResponse struct {
 type UserAgentResponse struct {
 	UserAgent string `json:"user-agent"`
 }
+
+// AuthResponse is the response for the basic-auth endpoint
+type AuthResponse struct {
+	Authenticated bool   `json:"authenticated"`
+	User          string `json:"user"`
+}

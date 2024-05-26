@@ -26,6 +26,10 @@ func getAbsoluteURL(r *http.Request) string {
 }
 
 func JsonError(w http.ResponseWriter, err string, code int) {
+
+	if err == "" {
+		err = http.StatusText(code)
+	}
 	writeJsonResponse(w, code, map[string]string{"error": err})
 }
 

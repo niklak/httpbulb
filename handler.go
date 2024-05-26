@@ -30,6 +30,8 @@ func NewRouter() *chi.Mux {
 	r.Handle("/anything", http.HandlerFunc(MethodsHandle))
 	r.Handle("/anything/{anything}", http.HandlerFunc(MethodsHandle))
 
+	r.Get("/basic-auth/{user}/{passwd}", http.HandlerFunc(BasicAuthHandle))
+
 	//TODO: add documentation
 
 	return r
