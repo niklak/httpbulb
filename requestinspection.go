@@ -1,21 +1,15 @@
 package httpbulb
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 )
 
 func HeadersHandle(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(HeadersResponse{Headers: r.Header})
+	writeJsonResponse(w, http.StatusOK, HeadersResponse{Headers: r.Header})
 }
 
 func IpHandle(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
 
 	var ip string
 	if forwardedFor := r.Header.Get("X-Forwarded-For"); forwardedFor != "" {
@@ -23,13 +17,9 @@ func IpHandle(w http.ResponseWriter, r *http.Request) {
 	} else {
 		ip = r.RemoteAddr
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(IpResponse{Origin: ip})
+	writeJsonResponse(w, http.StatusOK, IpResponse{Origin: ip})
 }
 
 func UserAgentHandle(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(UserAgentResponse{UserAgent: r.UserAgent()})
+	writeJsonResponse(w, http.StatusOK, UserAgentResponse{UserAgent: r.UserAgent()})
 }

@@ -1,7 +1,6 @@
 package httpbulb
 
 import (
-	"encoding/json"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -65,6 +64,7 @@ func newMethodResponse(r *http.Request) (response MethodsResponse, err error) {
 	return
 }
 
+// MethodsHandle is the basic handler for the methods endpoint (GET, POST, PUT, PATCH, DELETE)
 func MethodsHandle(w http.ResponseWriter, r *http.Request) {
 
 	var err error
@@ -75,7 +75,5 @@ func MethodsHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	writeJsonResponse(w, http.StatusOK, response)
 }

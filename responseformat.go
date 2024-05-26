@@ -12,6 +12,7 @@ import (
 	"github.com/andybalholm/brotli"
 )
 
+// GzipHandle is the handler that returns a response compressed with gzip
 func GzipHandle(w http.ResponseWriter, r *http.Request) {
 
 	var err error
@@ -41,6 +42,7 @@ func GzipHandle(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, buf)
 }
 
+// DeflateHandle is the handler that returns a response compressed with zlib
 func DeflateHandle(w http.ResponseWriter, r *http.Request) {
 
 	var err error
@@ -70,6 +72,7 @@ func DeflateHandle(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, buf)
 }
 
+// BrotliHandle is the handler that returns a response compressed with brotli
 func BrotliHandle(w http.ResponseWriter, r *http.Request) {
 
 	var err error

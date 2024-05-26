@@ -1,7 +1,6 @@
 package httpbulb
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -20,8 +19,8 @@ func statusCodeHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(StatusResponse{StatusText: http.StatusText(statusCode)})
+	writeJsonResponse(
+		w, statusCode,
+		StatusResponse{StatusText: http.StatusText(statusCode)},
+	)
 }

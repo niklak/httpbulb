@@ -26,8 +26,11 @@ func getAbsoluteURL(r *http.Request) string {
 }
 
 func JsonError(w http.ResponseWriter, err string, code int) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
+	writeJsonResponse(w, code, map[string]string{"error": err})
+}
+
+func writeJsonResponse(w http.ResponseWriter, code int, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(map[string]string{"error": err})
+	json.NewEncoder(w).Encode(data)
 }
