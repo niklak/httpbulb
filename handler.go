@@ -33,6 +33,7 @@ func NewRouter() *chi.Mux {
 	r.Get("/basic-auth/{user}/{passwd}", http.HandlerFunc(BasicAuthHandle))
 
 	r.Get("/stream/{n:[0-9]}", http.HandlerFunc(StreamNMessagesHandle))
+	r.Handle("/delay/{delay:[0-9]+}", http.HandlerFunc(DelayHandle))
 
 	//TODO: add documentation
 

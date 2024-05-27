@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -40,5 +41,31 @@ func StreamNMessagesHandle(w http.ResponseWriter, r *http.Request) {
 		enc.Encode(resp)
 		flusher.Flush()
 	}
+
+}
+
+// DelayHandle returns the same response as the MethodsHandle, but with a delay
+func DelayHandle(w http.ResponseWriter, r *http.Request) {
+	delayParam := chi.URLParam(r, "delay")
+	d, err := strconv.Atoi(delayParam)
+	if err != nil {
+		JsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d = min(d, 10)
+
+	delay := time.Duration(d) * time.Second
+
+	// Delay for d milliseconds
+	<-time.After(delay)
+
+	resp, err := newMethodResponse(r)
+
+	if err != nil {
+		JsonError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writeJsonResponse(w, http.StatusOK, resp)
 
 }

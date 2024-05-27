@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -62,6 +63,28 @@ func (s *DynamicSuite) TestStream() {
 	assert.NoError(s.T(), scanner.Err())
 
 	assert.Equal(s.T(), numMessages, totalMsg)
+
+}
+
+func (s *DynamicSuite) TestDelay() {
+	d := 2
+
+	apiURL := fmt.Sprintf("%s/delay/%d", s.testServer.URL, d)
+	started := time.Now()
+
+	req, err := http.NewRequest("GET", apiURL, nil)
+	assert.NoError(s.T(), err)
+
+	resp, err := s.client.Do(req)
+	assert.NoError(s.T(), err)
+
+	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+
+	defer resp.Body.Close()
+
+	elapsed := time.Since(started)
+	delay := time.Second * time.Duration(d)
+	assert.GreaterOrEqual(s.T(), elapsed, delay)
 
 }
 
