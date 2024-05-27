@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -23,6 +24,16 @@ func getAbsoluteURL(r *http.Request) string {
 		scheme = schemeHttps
 	}
 	return fmt.Sprintf("%s://%s%s", scheme, r.Host, r.URL.RequestURI())
+}
+
+func getIP(r *http.Request) string {
+	var ip string
+	if forwardedFor := r.Header.Get("X-Forwarded-For"); forwardedFor != "" {
+		ip = strings.TrimSpace(strings.SplitN(forwardedFor, ",", 2)[0])
+	} else {
+		ip = r.RemoteAddr
+	}
+	return ip
 }
 
 func JsonError(w http.ResponseWriter, err string, code int) {

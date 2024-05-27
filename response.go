@@ -1,6 +1,8 @@
 package httpbulb
 
-import "net/http"
+import (
+	"net/http"
+)
 
 // MethodsResponse is the response for the methods endpoint
 type MethodsResponse struct {
@@ -52,4 +54,18 @@ type UserAgentResponse struct {
 type AuthResponse struct {
 	Authenticated bool   `json:"authenticated"`
 	User          string `json:"user"`
+}
+
+// StreamResponse represents a response for the stream endpoint
+type StreamResponse struct {
+	// ID is the ID of the message
+	ID int `json:"id"`
+	// Args is a map of query parameters
+	Args map[string][]string `json:"args"`
+	// Data is the raw body of the request
+	Headers map[string][]string `json:"headers"`
+	// Origin is the IP address of the requester
+	Origin string `json:"origin"`
+	// URL is the full URL of the request
+	URL string `json:"url"`
 }

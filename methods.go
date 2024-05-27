@@ -14,7 +14,7 @@ func newMethodResponse(r *http.Request) (response MethodsResponse, err error) {
 	response = MethodsResponse{
 		Args:    r.URL.Query(),
 		Headers: r.Header,
-		Origin:  r.RemoteAddr,
+		Origin:  getIP(r),
 		URL:     getAbsoluteURL(r),
 	}
 	ct := r.Header.Get("Content-Type")
