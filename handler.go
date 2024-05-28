@@ -35,6 +35,11 @@ func NewRouter() *chi.Mux {
 	r.Get("/stream/{n:[0-9]}", http.HandlerFunc(StreamNMessagesHandle))
 	r.Handle("/delay/{delay:[0-9]+}", http.HandlerFunc(DelayHandle))
 
+	r.Get("/cookies", http.HandlerFunc(CookiesHandle))
+	r.Get("/cookies/set", http.HandlerFunc(SetCookiesHandle))
+	r.Get("/cookies/set/{name}/{value}", http.HandlerFunc(SetCookieHandle))
+	r.Get("/cookies/delete", http.HandlerFunc(DeleteCookiesHandle))
+
 	//TODO: add documentation
 
 	return r

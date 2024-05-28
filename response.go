@@ -69,3 +69,7 @@ type StreamResponse struct {
 	// URL is the full URL of the request
 	URL string `json:"url"`
 }
+
+type CookiesResponse struct {
+	Cookies map[string][]string `json:"cookies"`
+}
