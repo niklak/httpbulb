@@ -132,6 +132,51 @@ func Test_Form(t *testing.T) {
 
 }
 
+func Test_JSON(t *testing.T) {
+	type bulbResponse struct {
+		URL  string            `json:"url"`
+		JSON map[string]string `json:"json"`
+	}
+
+	handleFunc := NewRouter()
+	// Start a test server that will act as a proxy
+	testServer := httptest.NewServer(handleFunc)
+
+	defer testServer.Close()
+
+	methods := []string{"post", "put", "patch"}
+
+	for _, method := range methods {
+		testURL := fmt.Sprintf("%s/%s", testServer.URL, method)
+
+		req, err := http.NewRequest(
+			strings.ToUpper(method),
+			testURL,
+			strings.NewReader(`{"k":"v"}`),
+		)
+		assert.NoError(t, err)
+
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := httpClient.Do(req)
+		assert.NoError(t, err)
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		assert.NoError(t, err)
+		// in this case we require either a result or a response
+		result := new(bulbResponse)
+
+		json.Unmarshal(body, result)
+		// ensure that result has the expected value
+		assert.Equal(t, testURL, result.URL)
+
+		expectedJSON := map[string]string{"k": "v"}
+
+		assert.Equal(t, expectedJSON, result.JSON)
+	}
+}
+
 func Test_PostMultipart(t *testing.T) {
 
 	type bulbResponse struct {

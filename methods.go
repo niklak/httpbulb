@@ -1,6 +1,7 @@
 package httpbulb
 
 import (
+	"encoding/json"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -8,7 +9,6 @@ import (
 )
 
 func newMethodResponse(r *http.Request) (response MethodsResponse, err error) {
-	// TODO: add json support
 
 	var body []byte
 	response = MethodsResponse{
@@ -17,50 +17,61 @@ func newMethodResponse(r *http.Request) (response MethodsResponse, err error) {
 		Origin:  getIP(r),
 		URL:     getAbsoluteURL(r),
 	}
-	ct := r.Header.Get("Content-Type")
+
+	ct, _, _ := strings.Cut(r.Header.Get("Content-Type"), ";")
+
 	switch r.Method {
 	case http.MethodPost, http.MethodPut, http.MethodPatch:
-		if strings.HasPrefix(ct, "multipart/form-data") {
-			if err = r.ParseMultipartForm(64 << 20); err != nil {
-				return
-			}
-
-			if r.MultipartForm != nil && r.MultipartForm.File != nil {
-				files := make(map[string][]string)
-				for k, f := range r.MultipartForm.File {
-					for _, fileHeader := range f {
-						var file multipart.File
-
-						if file, err = fileHeader.Open(); err != nil {
-							return
-						}
-						var fBody []byte
-
-						if fBody, err = io.ReadAll(file); err != nil {
-							return
-						}
-						files[k] = append(files[k], string(fBody))
-					}
-				}
-				response.Files = files
-				response.Form = r.Form
-
-			}
-		} else if ct == "application/x-www-form-urlencoded" {
-			if err = r.ParseForm(); err != nil {
-				return
-			}
-			response.Form = r.Form
-		} else {
-			body, err = io.ReadAll(r.Body)
-			if err != nil {
-				return
-			}
-			response.Data = string(body)
-		}
+	default:
+		// do not read the body for GET and DELETE or any other requests
+		return
 	}
 
-	response.JSON = nil
+	switch ct {
+	case "multipart/form-data":
+		if err = r.ParseMultipartForm(64 << 20); err != nil {
+			return
+		}
+
+		if r.MultipartForm != nil && r.MultipartForm.File != nil {
+			files := make(map[string][]string)
+			for k, f := range r.MultipartForm.File {
+				for _, fileHeader := range f {
+					var file multipart.File
+
+					if file, err = fileHeader.Open(); err != nil {
+						return
+					}
+					var fBody []byte
+
+					if fBody, err = io.ReadAll(file); err != nil {
+						return
+					}
+					files[k] = append(files[k], string(fBody))
+				}
+			}
+			response.Files = files
+			response.Form = r.Form
+
+		}
+	case "application/x-www-form-urlencoded":
+		if err = r.ParseForm(); err != nil {
+			return
+		}
+		response.Form = r.Form
+
+	case "application/json":
+		if err = json.NewDecoder(r.Body).Decode(&response.JSON); err != nil {
+			return
+		}
+	default:
+		body, err = io.ReadAll(r.Body)
+		if err != nil {
+			return
+		}
+		response.Data = string(body)
+	}
+
 	return
 }
 

@@ -74,3 +74,5 @@ func DeleteCookiesHandle(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/cookies", http.StatusFound)
 
 }
+
+// TODO: add a handler to return an ordered cookie list!
