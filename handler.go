@@ -36,6 +36,7 @@ func NewRouter() *chi.Mux {
 	r.Handle("/delay/{delay:[0-9]+}", http.HandlerFunc(DelayHandle))
 
 	r.Get("/cookies", http.HandlerFunc(CookiesHandle))
+	r.Get("/cookies-list", http.HandlerFunc(CookiesListHandle))
 	r.Get("/cookies/set", http.HandlerFunc(SetCookiesHandle))
 	r.Get("/cookies/set/{name}/{value}", http.HandlerFunc(SetCookieHandle))
 	r.Get("/cookies/delete", http.HandlerFunc(DeleteCookiesHandle))

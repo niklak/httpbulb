@@ -73,3 +73,7 @@ type StreamResponse struct {
 type CookiesResponse struct {
 	Cookies map[string][]string `json:"cookies"`
 }
+
+type CookiesListResponse struct {
+	Cookies []*http.Cookie `json:"cookies"`
+}

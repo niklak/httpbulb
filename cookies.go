@@ -75,4 +75,8 @@ func DeleteCookiesHandle(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// TODO: add a handler to return an ordered cookie list!
+func CookiesListHandle(w http.ResponseWriter, r *http.Request) {
+
+	resp := CookiesListResponse{Cookies: r.Cookies()}
+	writeJsonResponse(w, http.StatusOK, resp)
+}

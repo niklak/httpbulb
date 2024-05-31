@@ -61,6 +61,39 @@ func (s *CookiesSuite) TestCookies() {
 
 }
 
+func (s *CookiesSuite) TestCookiesList() {
+
+	type cookie struct {
+		Name  string `json:"name"`
+		Value string `json:"value"`
+	}
+	type serverResponse struct {
+		Cookies []*cookie `json:"cookies"`
+	}
+
+	apiURL := fmt.Sprintf("%s/cookies-list", s.testServer.URL)
+
+	req, err := http.NewRequest("GET", apiURL, nil)
+	assert.NoError(s.T(), err)
+
+	req.Header.Set("Cookie", "k1=v1; k2=v2; k1=v3")
+
+	resp, err := s.client.Do(req)
+	assert.NoError(s.T(), err)
+
+	defer resp.Body.Close()
+
+	res := &serverResponse{}
+
+	err = json.NewDecoder(resp.Body).Decode(res)
+	assert.NoError(s.T(), err)
+
+	expected := []*cookie{{"k1", "v1"}, {"k2", "v2"}, {"k1", "v3"}}
+
+	assert.Equal(s.T(), expected, res.Cookies)
+
+}
+
 func (s *CookiesSuite) TestSetCookies() {
 	type serverResponse struct {
 		Cookies map[string][]string `json:"cookies"`
