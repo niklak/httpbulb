@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.13', '1.16', '1.18', '1.22' ]
+        go: [ '1.18', '1.22' ]
 
     name: Go ${{ matrix.go }} run
 
