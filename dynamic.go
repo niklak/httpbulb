@@ -1,6 +1,7 @@
 package httpbulb
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -8,6 +9,24 @@ import (
 
 	"github.com/go-chi/chi/v5"
 )
+
+func Base64DecodeHandle(w http.ResponseWriter, r *http.Request) {
+	// Decode the base64 encoded string
+	value := chi.URLParam(r, "value")
+
+	decoded, err := base64.URLEncoding.DecodeString(value)
+
+	if err != nil {
+		JsonError(w, err.Error(), http.StatusBadRequest)
+		return
+
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(decoded)
+
+}
 
 // StreamNMessagesHandle streams N json messages
 func StreamNMessagesHandle(w http.ResponseWriter, r *http.Request) {

@@ -2,8 +2,10 @@ package httpbulb
 
 import (
 	"bufio"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -85,6 +87,29 @@ func (s *DynamicSuite) TestDelay() {
 	elapsed := time.Since(started)
 	delay := time.Second * time.Duration(d)
 	assert.GreaterOrEqual(s.T(), elapsed, delay)
+
+}
+
+func (s *DynamicSuite) TestBase64Decode() {
+
+	encoded := base64.URLEncoding.EncodeToString([]byte("base64-decode test\n"))
+
+	apiURL := fmt.Sprintf("%s/base64/%s", s.testServer.URL, encoded)
+
+	req, err := http.NewRequest("GET", apiURL, nil)
+	assert.NoError(s.T(), err)
+
+	resp, err := s.client.Do(req)
+	assert.NoError(s.T(), err)
+
+	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	assert.NoError(s.T(), err)
+
+	assert.Equal(s.T(), "base64-decode test\n", string(body))
 
 }
 
