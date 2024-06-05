@@ -77,3 +77,7 @@ type CookiesResponse struct {
 type CookiesListResponse struct {
 	Cookies []*http.Cookie `json:"cookies"`
 }
+
+type UUIDResponse struct {
+	UUID string `json:"uuid"`
+}

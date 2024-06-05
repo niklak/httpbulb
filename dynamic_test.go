@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -171,6 +172,29 @@ func (s *DynamicSuite) TestStreamRandomBytes() {
 
 		assert.Equal(s.T(), numBytes, receivedBytes)
 	}
+}
+
+func (s *DynamicSuite) TestUUID() {
+
+	apiURL := fmt.Sprintf("%s/uuid", s.testServer.URL)
+
+	req, err := http.NewRequest("GET", apiURL, nil)
+	assert.NoError(s.T(), err)
+
+	resp, err := s.client.Do(req)
+	assert.NoError(s.T(), err)
+
+	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+
+	defer resp.Body.Close()
+
+	var uuidResp UUIDResponse
+	err = json.NewDecoder(resp.Body).Decode(&uuidResp)
+	assert.NoError(s.T(), err)
+
+	_, err = uuid.Parse(uuidResp.UUID)
+	assert.NoError(s.T(), err)
+
 }
 
 func TestDynamicSuite(t *testing.T) {

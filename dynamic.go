@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 // Base64DecodeHandle decodes a base64 encoded string and returns the decoded value
@@ -163,6 +164,11 @@ func StreamRandomBytesHandle(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+}
+
+// UUIDHandle returns a new UUID version 4
+func UUIDHandle(w http.ResponseWriter, r *http.Request) {
+	writeJsonResponse(w, http.StatusOK, &UUIDResponse{UUID: uuid.New().String()})
 }
 
 func randomBytes(totalBytes int, rnd *rand.Rand) []byte {
