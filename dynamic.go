@@ -3,6 +3,7 @@ package httpbulb
 import (
 	"encoding/base64"
 	"encoding/json"
+	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -169,6 +170,68 @@ func StreamRandomBytesHandle(w http.ResponseWriter, r *http.Request) {
 // UUIDHandle returns a new UUID version 4
 func UUIDHandle(w http.ResponseWriter, r *http.Request) {
 	writeJsonResponse(w, http.StatusOK, &UUIDResponse{UUID: uuid.New().String()})
+}
+
+// DripHandle drips data over a duration after an optional initial delay
+func DripHandle(w http.ResponseWriter, r *http.Request) {
+
+	var delay time.Duration
+	if delayParam := r.URL.Query().Get("delay"); delayParam != "" {
+		d, _ := strconv.Atoi(delayParam)
+		delay = time.Duration(d) * time.Second
+	}
+
+	var code int
+	if codeParam := r.URL.Query().Get("code"); codeParam != "" {
+		code, _ = strconv.Atoi(codeParam)
+	}
+
+	if code == 0 {
+		code = http.StatusOK
+	}
+
+	if code < 100 || code > 599 {
+		JsonError(w, "code: status code must be between 100 and 599", http.StatusBadRequest)
+		return
+	}
+
+	var numBytes int
+	if numBytesParam := r.URL.Query().Get("numbytes"); numBytesParam != "" {
+		numBytes, _ = strconv.Atoi(numBytesParam)
+	}
+
+	if numBytes <= 0 {
+		JsonError(w, "numbytes: number of bytes must be positive", http.StatusBadRequest)
+		return
+	}
+	// set max limit to 10MB
+	numBytes = min(numBytes, 1024*1024*10)
+
+	var duration time.Duration
+	if durationParam := r.URL.Query().Get("duration"); durationParam != "" {
+		d, _ := strconv.Atoi(durationParam)
+		duration = time.Duration(d) * time.Second
+
+	} else {
+		duration = time.Second * 2
+	}
+
+	<-time.After(delay)
+
+	pause := duration / time.Duration(numBytes)
+
+	flusher := w.(http.Flusher)
+
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.WriteHeader(code)
+	flusher.Flush()
+	log.Printf("pausing for %v between %d bytes\n", pause, numBytes)
+	for i := 0; i < numBytes; i++ {
+		w.Write([]byte{'*'})
+		flusher.Flush()
+		<-time.After(pause)
+	}
+
 }
 
 func randomBytes(totalBytes int, rnd *rand.Rand) []byte {

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -194,6 +195,40 @@ func (s *DynamicSuite) TestUUID() {
 
 	_, err = uuid.Parse(uuidResp.UUID)
 	assert.NoError(s.T(), err)
+
+}
+
+func (s *DynamicSuite) TestDrip() {
+
+	delay := 2
+	dur := 2
+	numBytes := 10
+	apiURL := fmt.Sprintf(
+		"%s/drip?numbytes=%d&delay=%d&duration=%d",
+		s.testServer.URL, numBytes, delay, dur,
+	)
+
+	req, err := http.NewRequest("GET", apiURL, nil)
+	assert.NoError(s.T(), err)
+
+	started := time.Now()
+
+	resp, err := s.client.Do(req)
+	assert.NoError(s.T(), err)
+
+	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	assert.NoError(s.T(), err)
+
+	elapsed := time.Since(started)
+	expected := time.Second * (time.Duration(delay) + time.Duration(dur))
+
+	assert.LessOrEqual(s.T(), expected, elapsed)
+
+	assert.Equal(s.T(), strings.Repeat("*", numBytes), string(body))
 
 }
 
