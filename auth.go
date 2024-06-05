@@ -2,10 +2,12 @@ package httpbulb
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
 
+// BasicAuthHandle prompts the user for authorization using HTTP Basic Auth.
 func BasicAuthHandle(w http.ResponseWriter, r *http.Request) {
 
 	userParam := chi.URLParam(r, "user")
@@ -22,5 +24,17 @@ func BasicAuthHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJsonResponse(w, http.StatusOK, AuthResponse{Authenticated: true, User: user})
+}
 
+// BearerAuthHandle prompts the user for authorization using bearer authentication
+func BearerAuthHandle(w http.ResponseWriter, r *http.Request) {
+	authPrefix := "Bearer "
+	authorization := r.Header.Get("Authorization")
+	if !strings.HasPrefix(authorization, authPrefix) {
+		w.Header().Set("WWW-Authenticate", `Bearer"`)
+		JsonError(w, "", http.StatusUnauthorized)
+		return
+	}
+	token := authorization[len(authPrefix):]
+	writeJsonResponse(w, http.StatusOK, AuthResponse{Authenticated: true, Token: token})
 }

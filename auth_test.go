@@ -86,6 +86,55 @@ func (s *AuthSuite) TestBasicAuthErr() {
 
 }
 
+func (s *AuthSuite) TestBearerAuthOk() {
+
+	type serverResponse struct {
+		Authenticated bool   `json:"authenticated"`
+		Token         string `json:"token"`
+	}
+
+	token := "1234567890"
+
+	addr := fmt.Sprintf("%s/bearer", s.testServer.URL)
+	req, err := http.NewRequest("GET", addr, nil)
+	assert.NoError(s.T(), err)
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := s.client.Do(req)
+	assert.NoError(s.T(), err)
+
+	defer resp.Body.Close()
+
+	result := &serverResponse{}
+	err = json.NewDecoder(resp.Body).Decode(result)
+	assert.NoError(s.T(), err)
+
+	expected := &serverResponse{Authenticated: true, Token: token}
+
+	assert.Equal(s.T(), expected, result)
+}
+
+func (s *AuthSuite) TestBearerAuthErr() {
+
+	token := "1234567890"
+
+	addr := fmt.Sprintf("%s/bearer", s.testServer.URL)
+	req, err := http.NewRequest("GET", addr, nil)
+	assert.NoError(s.T(), err)
+
+	req.Header.Set("Authorization", "Token "+token)
+
+	resp, err := s.client.Do(req)
+	assert.NoError(s.T(), err)
+
+	defer resp.Body.Close()
+
+	defer resp.Body.Close()
+
+	assert.Equal(s.T(), http.StatusUnauthorized, resp.StatusCode)
+}
+
 func TestAuthSuite(t *testing.T) {
 	suite.Run(t, new(AuthSuite))
 }

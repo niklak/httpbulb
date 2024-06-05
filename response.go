@@ -53,7 +53,8 @@ type UserAgentResponse struct {
 // AuthResponse is the response for the basic-auth endpoint
 type AuthResponse struct {
 	Authenticated bool   `json:"authenticated"`
-	User          string `json:"user"`
+	User          string `json:"user,omitempty"`
+	Token         string `json:"token,omitempty"`
 }
 
 // StreamResponse represents a response for the stream endpoint
