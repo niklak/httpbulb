@@ -113,6 +113,66 @@ func (s *DynamicSuite) TestBase64Decode() {
 
 }
 
+func (s *DynamicSuite) TestRandomBytes() {
+
+	bytesSizes := []int{0, 10, 512}
+
+	for _, numBytes := range bytesSizes {
+		apiURL := fmt.Sprintf("%s/bytes/%d", s.testServer.URL, numBytes)
+
+		req, err := http.NewRequest("GET", apiURL, nil)
+		assert.NoError(s.T(), err)
+
+		resp, err := s.client.Do(req)
+		assert.NoError(s.T(), err)
+
+		assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		assert.NoError(s.T(), err)
+
+		assert.Equal(s.T(), numBytes, len(body))
+	}
+
+}
+
+func (s *DynamicSuite) TestStreamRandomBytes() {
+
+	numBytes := 1024
+
+	// chunk sizes:
+	// 0 will be used 1 by default -- chunk by 1 byte
+	// 24 bytes as chunk, the last chunk will be lesser then others
+	// 512 bytes -- nothing special
+	// 2028 bytes -- this chunk size bigger then the total bytes, so the body response will be sent in one chunk
+	chunkSizes := []int{0, 24, 512, 2028}
+
+	for _, chunkSize := range chunkSizes {
+		apiURL := fmt.Sprintf("%s/stream-bytes/%d?chunk_size=%d", s.testServer.URL, numBytes, chunkSize)
+
+		req, err := http.NewRequest("GET", apiURL, nil)
+		assert.NoError(s.T(), err)
+
+		resp, err := s.client.Do(req)
+		assert.NoError(s.T(), err)
+
+		assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+
+		defer resp.Body.Close()
+
+		assert.NoError(s.T(), err)
+
+		body, err := io.ReadAll(resp.Body)
+
+		assert.NoError(s.T(), err)
+		receivedBytes := len(body)
+
+		assert.Equal(s.T(), numBytes, receivedBytes)
+	}
+}
+
 func TestDynamicSuite(t *testing.T) {
 	suite.Run(t, new(DynamicSuite))
 }

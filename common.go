@@ -36,6 +36,12 @@ func getIP(r *http.Request) string {
 	return ip
 }
 
+func TextError(w http.ResponseWriter, err string, code int) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(code)
+	w.Write([]byte(err))
+}
+
 func JsonError(w http.ResponseWriter, err string, code int) {
 
 	if err == "" {
