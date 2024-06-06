@@ -7,9 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// BasicAuthHandle prompts the user for authorization using HTTP Basic Auth.
-func BasicAuthHandle(w http.ResponseWriter, r *http.Request) {
-
+func authHandle(w http.ResponseWriter, r *http.Request, errCode int) {
 	userParam := chi.URLParam(r, "user")
 	passwdParam := chi.URLParam(r, "passwd")
 
@@ -19,11 +17,25 @@ func BasicAuthHandle(w http.ResponseWriter, r *http.Request) {
 
 	if !ok || !authenticated {
 		w.Header().Set("WWW-Authenticate", `Basic realm="Fake Realm"`)
-		JsonError(w, "", http.StatusUnauthorized)
+		JsonError(w, "", errCode)
 		return
 	}
 
 	writeJsonResponse(w, http.StatusOK, AuthResponse{Authenticated: true, User: user})
+
+}
+
+// BasicAuthHandle prompts the user for authorization using HTTP Basic Auth.
+// It returns 401 if not authorized.
+func BasicAuthHandle(w http.ResponseWriter, r *http.Request) {
+
+	authHandle(w, r, http.StatusUnauthorized)
+}
+
+// HiddenBasicAuthHandle prompts the user for authorization using HTTP Basic Auth.
+// It returns 404 if not authorized.
+func HiddenBasicAuthHandle(w http.ResponseWriter, r *http.Request) {
+	authHandle(w, r, http.StatusNotFound)
 }
 
 // BearerAuthHandle prompts the user for authorization using bearer authentication

@@ -86,6 +86,28 @@ func (s *AuthSuite) TestBasicAuthErr() {
 
 }
 
+func (s *AuthSuite) TestHiddenBasicAuthErr() {
+
+	user := "mememe"
+	passwd := "mymymy"
+
+	addr := fmt.Sprintf("%s/hidden-basic-auth/%s/%s", s.testServer.URL, user, passwd)
+	req, err := http.NewRequest("GET", addr, nil)
+	assert.NoError(s.T(), err)
+
+	req.SetBasicAuth(user, "wrongpasswd")
+
+	resp, err := s.client.Do(req)
+	assert.NoError(s.T(), err)
+
+	defer resp.Body.Close()
+
+	io.Copy(io.Discard, resp.Body)
+
+	assert.Equal(s.T(), http.StatusNotFound, resp.StatusCode)
+
+}
+
 func (s *AuthSuite) TestBearerAuthOk() {
 
 	type serverResponse struct {
@@ -127,8 +149,6 @@ func (s *AuthSuite) TestBearerAuthErr() {
 
 	resp, err := s.client.Do(req)
 	assert.NoError(s.T(), err)
-
-	defer resp.Body.Close()
 
 	defer resp.Body.Close()
 
