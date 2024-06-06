@@ -40,6 +40,8 @@ func NewRouter() *chi.Mux {
 	r.Get("/bytes/{n:[0-9]+}", http.HandlerFunc(RandomBytesHandle))
 	r.Get("/drip", http.HandlerFunc(DripHandle))
 	r.Get("/uuid", http.HandlerFunc(UUIDHandle))
+	r.Get("/links/{n:[0-9]+}/{offset:[0-9]+}", http.HandlerFunc(LinkPageHandle))
+	r.Get("/links/{n:[0-9]+}", http.HandlerFunc(LinksHandle))
 	r.Handle("/delay/{delay:[0-9]+}", http.HandlerFunc(DelayHandle))
 
 	r.Get("/cookies", http.HandlerFunc(CookiesHandle))

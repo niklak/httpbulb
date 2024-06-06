@@ -232,6 +232,55 @@ func (s *DynamicSuite) TestDrip() {
 
 }
 
+func (s *DynamicSuite) TestLinkPage() {
+
+	numLinks := 3
+	offset := 1
+
+	apiURL := fmt.Sprintf("%s/links/%d/%d", s.testServer.URL, numLinks, offset)
+
+	req, err := http.NewRequest("GET", apiURL, nil)
+	assert.NoError(s.T(), err)
+
+	resp, err := s.client.Do(req)
+	assert.NoError(s.T(), err)
+
+	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	assert.NoError(s.T(), err)
+
+	expected := `<html><head><title>Links</title></head><body><a href='/links/3/0'>0</a> 1 <a href='/links/3/2'>2</a> </body></html>`
+
+	assert.Equal(s.T(), expected, string(body))
+}
+
+func (s *DynamicSuite) TestLinks() {
+
+	numLinks := 3
+
+	apiURL := fmt.Sprintf("%s/links/%d", s.testServer.URL, numLinks)
+
+	req, err := http.NewRequest("GET", apiURL, nil)
+	assert.NoError(s.T(), err)
+
+	resp, err := s.client.Do(req)
+	assert.NoError(s.T(), err)
+
+	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	assert.NoError(s.T(), err)
+
+	expected := `<html><head><title>Links</title></head><body>0 <a href='/links/3/1'>1</a> <a href='/links/3/2'>2</a> </body></html>`
+
+	assert.Equal(s.T(), expected, string(body))
+}
+
 func TestDynamicSuite(t *testing.T) {
 	suite.Run(t, new(DynamicSuite))
 }

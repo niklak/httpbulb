@@ -3,6 +3,7 @@ package httpbulb
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -232,6 +233,47 @@ func DripHandle(w http.ResponseWriter, r *http.Request) {
 		<-time.After(pause)
 	}
 
+}
+
+// LinkPageHandle generates a page containing n links to other pages which do the same.
+func LinkPageHandle(w http.ResponseWriter, r *http.Request) {
+	nParam := chi.URLParam(r, "n")
+	n, err := strconv.Atoi(nParam)
+	if err != nil {
+		JsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	n = min(max(1, n), 200)
+
+	offsetParam := chi.URLParam(r, "offset")
+
+	offset, err := strconv.Atoi(offsetParam)
+	if err != nil {
+		JsonError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+
+	fmt.Fprintf(w, "<html><head><title>Links</title></head><body>")
+
+	for i := 0; i < n; i++ {
+		if i == offset {
+			fmt.Fprintf(w, `%d `, i)
+		} else {
+			fmt.Fprintf(w, `<a href='/links/%d/%d'>%d</a> `, n, i, i)
+		}
+	}
+	fmt.Fprint(w, "</body></html>")
+}
+
+// LinksHandle redirects to first links page.
+func LinksHandle(w http.ResponseWriter, r *http.Request) {
+	nParam := chi.URLParam(r, "n")
+	dst := fmt.Sprintf("/links/%s/0", nParam)
+	http.Redirect(w, r, dst, http.StatusFound)
 }
 
 func randomBytes(totalBytes int, rnd *rand.Rand) []byte {

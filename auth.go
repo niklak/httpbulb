@@ -7,7 +7,37 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func authHandle(w http.ResponseWriter, r *http.Request, errCode int) {
+// BasicAuthHandle prompts the user for authorization using HTTP Basic Auth.
+// It returns 401 if not authorized.
+func BasicAuthHandle(w http.ResponseWriter, r *http.Request) {
+	basicAuthHandle(w, r, http.StatusUnauthorized)
+}
+
+// HiddenBasicAuthHandle prompts the user for authorization using HTTP Basic Auth.
+// It returns 404 if not authorized.
+func HiddenBasicAuthHandle(w http.ResponseWriter, r *http.Request) {
+	basicAuthHandle(w, r, http.StatusNotFound)
+}
+
+// BearerAuthHandle prompts the user for authorization using bearer authentication
+func BearerAuthHandle(w http.ResponseWriter, r *http.Request) {
+	authPrefix := "Bearer "
+	authorization := r.Header.Get("Authorization")
+	if !strings.HasPrefix(authorization, authPrefix) {
+		w.Header().Set("WWW-Authenticate", `Bearer"`)
+		JsonError(w, "", http.StatusUnauthorized)
+		return
+	}
+	token := authorization[len(authPrefix):]
+	writeJsonResponse(w, http.StatusOK, AuthResponse{Authenticated: true, Token: token})
+}
+
+// DigestAuthHandle prompts the user for authorization using HTTP Digest Auth.
+func DigestAuthHandle(w http.ResponseWriter, r *http.Request) {
+	JsonError(w, "Not implemented", http.StatusNotImplemented)
+}
+
+func basicAuthHandle(w http.ResponseWriter, r *http.Request, errCode int) {
 	userParam := chi.URLParam(r, "user")
 	passwdParam := chi.URLParam(r, "passwd")
 
@@ -23,30 +53,4 @@ func authHandle(w http.ResponseWriter, r *http.Request, errCode int) {
 
 	writeJsonResponse(w, http.StatusOK, AuthResponse{Authenticated: true, User: user})
 
-}
-
-// BasicAuthHandle prompts the user for authorization using HTTP Basic Auth.
-// It returns 401 if not authorized.
-func BasicAuthHandle(w http.ResponseWriter, r *http.Request) {
-
-	authHandle(w, r, http.StatusUnauthorized)
-}
-
-// HiddenBasicAuthHandle prompts the user for authorization using HTTP Basic Auth.
-// It returns 404 if not authorized.
-func HiddenBasicAuthHandle(w http.ResponseWriter, r *http.Request) {
-	authHandle(w, r, http.StatusNotFound)
-}
-
-// BearerAuthHandle prompts the user for authorization using bearer authentication
-func BearerAuthHandle(w http.ResponseWriter, r *http.Request) {
-	authPrefix := "Bearer "
-	authorization := r.Header.Get("Authorization")
-	if !strings.HasPrefix(authorization, authPrefix) {
-		w.Header().Set("WWW-Authenticate", `Bearer"`)
-		JsonError(w, "", http.StatusUnauthorized)
-		return
-	}
-	token := authorization[len(authPrefix):]
-	writeJsonResponse(w, http.StatusOK, AuthResponse{Authenticated: true, Token: token})
 }
