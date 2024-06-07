@@ -281,6 +281,40 @@ func (s *DynamicSuite) TestLinks() {
 	assert.Equal(s.T(), expected, string(body))
 }
 
+func (s *DynamicSuite) TestRange() {
+
+	numBytes := 30
+	rangeHeader := "bytes=10-20"
+	//duration is used only to calculate a pause per byte
+	dur := 2
+	apiURL := fmt.Sprintf("%s/range/%d?duration=%d", s.testServer.URL, numBytes, dur)
+
+	req, err := http.NewRequest("GET", apiURL, nil)
+	assert.NoError(s.T(), err)
+
+	req.Header.Set("Range", rangeHeader)
+
+	resp, err := s.client.Do(req)
+	assert.NoError(s.T(), err)
+
+	assert.Equal(s.T(), http.StatusPartialContent, resp.StatusCode)
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	assert.NoError(s.T(), err)
+
+	expectedHeaders := http.Header{
+		"Etag":           []string{fmt.Sprintf("range%d", numBytes)},
+		"Content-Length": []string{"11"},
+		"Content-Range":  []string{"bytes 10-20/30"},
+	}
+
+	assert.Equal(s.T(), "klmnopqrstu", string(body))
+	assert.Subset(s.T(), resp.Header, expectedHeaders)
+
+}
+
 func TestDynamicSuite(t *testing.T) {
 	suite.Run(t, new(DynamicSuite))
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -226,7 +225,6 @@ func DripHandle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.WriteHeader(code)
 	flusher.Flush()
-	log.Printf("pausing for %v between %d bytes\n", pause, numBytes)
 	for i := 0; i < numBytes; i++ {
 		w.Write([]byte{'*'})
 		flusher.Flush()
@@ -276,32 +274,88 @@ func LinksHandle(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, dst, http.StatusFound)
 }
 
-func randomBytes(totalBytes int, rnd *rand.Rand) []byte {
-	var body []byte
-
-	for i := 0; i < totalBytes; i++ {
-		body = append(body, byte(rnd.Intn(256)))
-	}
-
-	return body
-}
-
-func extractTotalBytes(r *http.Request) (totalBytes int, err error) {
-	n := chi.URLParam(r, "n")
-	totalBytes, err = strconv.Atoi(n)
-	if err != nil {
+// RangeHandle streams n random bytes generated with given seed, at given chunk size per packet
+func RangeHandle(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var numBytes int
+	if numBytes, err = strconv.Atoi(chi.URLParam(r, "numbytes")); err != nil {
+		TextError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	totalBytes = min(totalBytes, 100*1024)
-	return
-}
 
-func extractSeed(r *http.Request) (seed int64, err error) {
-	seedParam := r.URL.Query().Get("seed")
-	if seedParam == "" {
-		seed = time.Now().UnixNano()
-	} else {
-		seed, err = strconv.ParseInt(seedParam, 10, 64)
+	if numBytes < 0 || numBytes > (100*1024) {
+		w.Header().Set("ETag", fmt.Sprintf("range%d", numBytes))
+		w.Header().Set("Accept-Ranges", "bytes")
+		TextError(w, "number of bytes must be in the range (0, 102400]", http.StatusNotFound)
+		return
 	}
-	return
+
+	var chunkSize int
+	if chunkSizeParam := r.URL.Query().Get("chunk_size"); chunkSizeParam != "" {
+		chunkSize, _ = strconv.Atoi(chunkSizeParam)
+		chunkSize = max(1, chunkSize)
+	} else {
+		chunkSize = 1024 * 10
+	}
+
+	var duration time.Duration
+	if durationParam := r.URL.Query().Get("duration"); durationParam != "" {
+		d, _ := strconv.Atoi(durationParam)
+		duration = time.Duration(d) * time.Second
+	}
+
+	pausePerByte := duration / time.Duration(numBytes)
+
+	firstBytePos, lastBytePos := getRequestRange(r.Header.Get("Range"), numBytes)
+
+	if firstBytePos > lastBytePos ||
+		firstBytePos > numBytes ||
+		lastBytePos > numBytes {
+
+		w.Header().Set("ETag", fmt.Sprintf("range%d", numBytes))
+		w.Header().Set("Accept-Ranges", "bytes")
+		w.Header().Set("Content-Range", fmt.Sprintf("bytes */%d", numBytes))
+		w.Header().Set("Content-Length", "0")
+		TextError(w, "", http.StatusRequestedRangeNotSatisfiable)
+		return
+	}
+
+	rangeLength := (lastBytePos + 1) - firstBytePos
+	contentRange := fmt.Sprintf("bytes %d-%d/%d", firstBytePos, lastBytePos, numBytes)
+
+	var statusCode int
+
+	if firstBytePos == 0 && lastBytePos == numBytes-1 {
+		statusCode = http.StatusOK
+	} else {
+		statusCode = http.StatusPartialContent
+	}
+
+	flusher := w.(http.Flusher)
+
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("ETag", fmt.Sprintf("range%d", numBytes))
+	w.Header().Set("Accept-Ranges", "bytes")
+	w.Header().Set("Content-Length", strconv.Itoa(rangeLength))
+	w.Header().Set("Content-Range", contentRange)
+	w.WriteHeader(statusCode)
+
+	flusher.Flush()
+	chunk := make([]byte, 0)
+	for i := firstBytePos; i < lastBytePos+1; i++ {
+
+		chunk = append(chunk, byte(97+(i%26)))
+		if len(chunk) == chunkSize {
+			w.Write(chunk)
+			flusher.Flush()
+			<-time.After(pausePerByte * time.Duration(chunkSize))
+			chunk = make([]byte, 0)
+		}
+	}
+	if len(chunk) > 0 {
+		<-time.After(pausePerByte * time.Duration(len(chunk)))
+		w.Write(chunk)
+		flusher.Flush()
+
+	}
 }
