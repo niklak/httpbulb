@@ -101,3 +101,15 @@ func BrotliHandle(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	io.Copy(w, buf)
 }
+
+func RobotsHandle(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+
+	body := []byte(`
+User-agent: *
+Disallow: /deny
+	`)
+	w.Write(body)
+}
