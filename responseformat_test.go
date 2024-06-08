@@ -140,6 +140,23 @@ Disallow: /deny
 	assert.Equal(s.T(), expectedBody, body)
 }
 
+func (s *ResponseFormatSuite) TestDeny() {
+
+	req, err := http.NewRequest("GET", s.testServer.URL+"/deny", nil)
+	assert.NoError(s.T(), err)
+
+	resp, err := s.client.Do(req)
+	assert.NoError(s.T(), err)
+	defer resp.Body.Close()
+
+	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+
+	body, err := io.ReadAll(resp.Body)
+	assert.NoError(s.T(), err)
+
+	assert.Contains(s.T(), string(body), "YOU SHOULDN'T BE HERE\n")
+}
+
 func TestResponseFormatSuite(t *testing.T) {
 	suite.Run(t, new(ResponseFormatSuite))
 }

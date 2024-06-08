@@ -12,6 +12,11 @@ import (
 	"github.com/andybalholm/brotli"
 )
 
+const angryASCII = `
+(╯°□°）╯︵ ┻━┻
+YOU SHOULDN'T BE HERE
+`
+
 // GzipHandle is the handler that returns a response compressed with gzip
 func GzipHandle(w http.ResponseWriter, r *http.Request) {
 
@@ -112,4 +117,11 @@ User-agent: *
 Disallow: /deny
 	`)
 	w.Write(body)
+}
+
+// DenyHandle  returns a page denied by robots.txt rules.
+func DenyHandle(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(angryASCII))
 }

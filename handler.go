@@ -23,6 +23,7 @@ func NewRouter() *chi.Mux {
 	r.Get("/gzip", http.HandlerFunc(GzipHandle))
 	r.Get("/deflate", http.HandlerFunc(DeflateHandle))
 	r.Get("/brotli", http.HandlerFunc(BrotliHandle))
+	r.Get("/deny", http.HandlerFunc(DenyHandle))
 
 	// TODO: add a handler that accepts a sequence of status codes
 	// and returns a random status code from it.
