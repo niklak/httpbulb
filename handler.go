@@ -51,6 +51,8 @@ func NewRouter() *chi.Mux {
 	r.Get("/cookies/set/{name}/{value}", http.HandlerFunc(SetCookieHandle))
 	r.Get("/cookies/delete", http.HandlerFunc(DeleteCookiesHandle))
 
+	r.Handle("/redirect-to", http.HandlerFunc(RedirectToHandle))
+
 	//TODO: add documentation
 
 	return r
