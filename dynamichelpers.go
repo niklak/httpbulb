@@ -76,18 +76,19 @@ func getRequestRange(rangeHeader string, upperBound int) (firstPos int, lastPos 
 
 	if firstPosPtr == nil && lastPosPtr == nil {
 		// Request full range
-		*firstPosPtr = 0
-		*lastPosPtr = upperBound - 1
+		firstPos = 0
+		lastPos = upperBound - 1
 	} else if firstPosPtr == nil {
 		// Request the last X bytes
-		*firstPosPtr = max(0, upperBound-*lastPosPtr)
-		*lastPosPtr = upperBound - 1
+		firstPos = max(0, upperBound-*lastPosPtr)
+		lastPos = upperBound - 1
 	} else if lastPosPtr == nil {
-		*lastPosPtr = upperBound - 1
+		firstPos = *firstPosPtr
+		lastPos = upperBound - 1
+	} else {
+		firstPos = *firstPosPtr
+		lastPos = *lastPosPtr
 	}
-
-	firstPos = *firstPosPtr
-	lastPos = *lastPosPtr
 
 	return
 }
