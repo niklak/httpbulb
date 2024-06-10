@@ -13,11 +13,13 @@ const (
 )
 
 func getURLScheme(r *http.Request) string {
-	// TODO: Consider X-Forwarded-Proto
-	if r.TLS == nil {
-		return schemeHttp
+	if scheme := r.Header.Get("X-Forwarded-Proto"); scheme != "" {
+		return scheme
 	}
-	return schemeHttps
+	if r.TLS != nil {
+		return schemeHttps
+	}
+	return schemeHttp
 
 }
 
@@ -25,10 +27,11 @@ func getAbsoluteURL(r *http.Request) string {
 	if r.URL.IsAbs() {
 		return r.URL.String()
 	}
-
 	scheme := getURLScheme(r)
-	//TODO:
-	return fmt.Sprintf("%s://%s%s", scheme, r.Host, r.URL.RequestURI())
+	absURL := *r.URL
+	absURL.Scheme = scheme
+	absURL.Host = r.Host
+	return absURL.String()
 }
 
 func getIP(r *http.Request) string {
