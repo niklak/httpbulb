@@ -61,14 +61,21 @@ func RedirectToHandle(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, dstURL, responseStatusCode)
 }
 
+// RelativeRedirectHandle is a http handler that makes 302/3XX redirects `n` times.
+// `Location` header is a relative URL.
 func RelativeRedirectHandle(w http.ResponseWriter, r *http.Request) {
 	redirectHandle(w, r, false)
 }
 
+// AbsoluteRedirectHandle is a http handler that makes 302/3XX redirects `n` times.
+// `Location` header is an absolute URL.
 func AbsoluteRedirectHandle(w http.ResponseWriter, r *http.Request) {
 	redirectHandle(w, r, true)
 }
 
+// RedirectHandle is a http handler that makes 302/3XX redirects `n` times.
+// `n` is a number in the URL path, if `n` is 1, it will redirect to `/get`.
+// if `absolute` query param is true, `Location` header will be an absolute URL.
 func RedirectHandle(w http.ResponseWriter, r *http.Request) {
 	absolute := r.URL.Query().Get("absolute") == "true"
 	redirectHandle(w, r, absolute)
