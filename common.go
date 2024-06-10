@@ -12,17 +12,22 @@ const (
 	schemeHttps = "https"
 )
 
+func getURLScheme(r *http.Request) string {
+	// TODO: Consider X-Forwarded-Proto
+	if r.TLS == nil {
+		return schemeHttp
+	}
+	return schemeHttps
+
+}
+
 func getAbsoluteURL(r *http.Request) string {
 	if r.URL.IsAbs() {
 		return r.URL.String()
 	}
 
-	var scheme string
-	if r.TLS == nil {
-		scheme = schemeHttp
-	} else {
-		scheme = schemeHttps
-	}
+	scheme := getURLScheme(r)
+	//TODO:
 	return fmt.Sprintf("%s://%s%s", scheme, r.Host, r.URL.RequestURI())
 }
 
@@ -39,7 +44,7 @@ func getIP(r *http.Request) string {
 func TextError(w http.ResponseWriter, err string, code int) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(code)
-	w.Write([]byte(err))
+	fmt.Fprintln(w, err)
 }
 
 func JsonError(w http.ResponseWriter, err string, code int) {

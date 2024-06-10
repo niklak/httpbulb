@@ -1,6 +1,7 @@
 package httpbulb
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -15,8 +16,9 @@ import (
 
 type RedirectSuite struct {
 	suite.Suite
-	testServer *httptest.Server
-	client     *http.Client
+	testServer        *httptest.Server
+	clientNoRedirect  *http.Client
+	clientOneRedirect *http.Client
 }
 
 func (s *RedirectSuite) SetupSuite() {
@@ -24,10 +26,18 @@ func (s *RedirectSuite) SetupSuite() {
 	handleFunc := NewRouter()
 	s.testServer = httptest.NewServer(handleFunc)
 
-	s.client = http.DefaultClient
+	s.clientOneRedirect = &http.Client{}
+	s.clientOneRedirect.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if len(via) >= 1 {
+			return http.ErrUseLastResponse
+		}
+		return nil
+	}
+
+	s.clientNoRedirect = &http.Client{}
 
 	// client will not follow redirects
-	s.client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+	s.clientNoRedirect.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		return http.ErrUseLastResponse
 	}
 }
@@ -36,7 +46,7 @@ func (s *RedirectSuite) TearDownSuite() {
 	s.testServer.Close()
 }
 
-func (s *RedirectSuite) TestRedirectParam() {
+func (s *RedirectSuite) TestRedirectTo() {
 	var methods = []string{"GET", "DELETE", "POST", "PUT", "PATCH"}
 	for _, method := range methods {
 		headers := http.Header{}
@@ -63,7 +73,7 @@ func (s *RedirectSuite) TestRedirectParam() {
 			req, err := http.NewRequest(method, apiURL.String(), body)
 			assert.NoError(t, err)
 			req.Header = headers
-			resp, err := s.client.Do(req)
+			resp, err := s.clientNoRedirect.Do(req)
 			assert.NoError(t, err)
 			io.Copy(io.Discard, resp.Body)
 			resp.Body.Close()
@@ -74,6 +84,87 @@ func (s *RedirectSuite) TestRedirectParam() {
 
 }
 
+func (s *RedirectSuite) TestRedirects() {
+
+	type testArgs struct {
+		apiURL         string
+		wantLocation   string
+		wantStatusCode int
+	}
+
+	tests := []testArgs{
+		{
+			apiURL:         fmt.Sprintf("%s/redirect/3", s.testServer.URL),
+			wantLocation:   "/relative-redirect/2",
+			wantStatusCode: http.StatusFound,
+		},
+		{
+			apiURL:         fmt.Sprintf("%s/redirect/0", s.testServer.URL),
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			apiURL:         fmt.Sprintf("%s/redirect/a", s.testServer.URL),
+			wantStatusCode: http.StatusNotFound,
+		},
+		{
+			apiURL:         fmt.Sprintf("%s/redirect/3?absolute=true", s.testServer.URL),
+			wantLocation:   fmt.Sprintf("%s/absolute-redirect/2", s.testServer.URL),
+			wantStatusCode: http.StatusFound,
+		},
+		{
+			apiURL:         fmt.Sprintf("%s/relative-redirect/3", s.testServer.URL),
+			wantLocation:   "/relative-redirect/2",
+			wantStatusCode: http.StatusFound,
+		},
+		{
+			apiURL:         fmt.Sprintf("%s/relative-redirect/1", s.testServer.URL),
+			wantLocation:   "/get",
+			wantStatusCode: http.StatusFound,
+		},
+		{
+			apiURL:         fmt.Sprintf("%s/absolute-redirect/3", s.testServer.URL),
+			wantLocation:   fmt.Sprintf("%s/absolute-redirect/2", s.testServer.URL),
+			wantStatusCode: http.StatusFound,
+		},
+		{
+			apiURL:         fmt.Sprintf("%s/absolute-redirect/1", s.testServer.URL),
+			wantLocation:   fmt.Sprintf("%s/get", s.testServer.URL),
+			wantStatusCode: http.StatusFound,
+		},
+	}
+
+	for _, tt := range tests {
+		req, err := http.NewRequest(http.MethodGet, tt.apiURL, nil)
+		assert.NoError(s.T(), err)
+		resp, err := s.clientOneRedirect.Do(req)
+		assert.NoError(s.T(), err)
+		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+		assert.Equal(s.T(), tt.wantStatusCode, resp.StatusCode)
+		// as this test follows only for one redirect, the location should be: /relative-redirect/2
+		assert.Equal(s.T(), tt.wantLocation, resp.Header.Get("Location"))
+	}
+}
+
 func TestRedirectSuite(t *testing.T) {
 	suite.Run(t, new(RedirectSuite))
+}
+
+func Test_redirectHandle(t *testing.T) {
+	type args struct {
+		w        http.ResponseWriter
+		r        *http.Request
+		absolute bool
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			redirectHandle(tt.args.w, tt.args.r, tt.args.absolute)
+		})
+	}
 }

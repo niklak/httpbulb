@@ -1,8 +1,12 @@
 package httpbulb
 
 import (
+	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
 )
 
 // RedirectToHandle is a http handler that makes 302/3XX redirects to the given URL
@@ -53,5 +57,57 @@ func RedirectToHandle(w http.ResponseWriter, r *http.Request) {
 	} else {
 		responseStatusCode = http.StatusFound
 	}
+
 	http.Redirect(w, r, dstURL, responseStatusCode)
+}
+
+func RelativeRedirectHandle(w http.ResponseWriter, r *http.Request) {
+	redirectHandle(w, r, false)
+}
+
+func AbsoluteRedirectHandle(w http.ResponseWriter, r *http.Request) {
+	redirectHandle(w, r, true)
+}
+
+func RedirectHandle(w http.ResponseWriter, r *http.Request) {
+	absolute := r.URL.Query().Get("absolute") == "true"
+	redirectHandle(w, r, absolute)
+}
+
+func redirectHandle(w http.ResponseWriter, r *http.Request, absolute bool) {
+
+	nParam := chi.URLParam(r, "n")
+
+	n, err := strconv.Atoi(nParam)
+	// actually this case is impossible, bad request is handled by chi router,
+	// and n can be matched only as a number, chi will return 404 if it's not a number
+	if err != nil {
+		TextError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if n < 1 {
+		TextError(w, "n must be greater than 0", http.StatusBadRequest)
+		return
+	}
+
+	var locURL string
+	var p string
+	if n == 1 {
+		p = "/get"
+	}
+
+	if absolute {
+		if p == "" {
+			p = fmt.Sprintf("/absolute-redirect/%d", n-1)
+		}
+		u := url.URL{Scheme: getURLScheme(r), Host: r.Host, Path: p}
+		locURL = u.String()
+	} else if p == "" {
+		locURL = fmt.Sprintf("/relative-redirect/%d", n-1)
+	} else {
+		locURL = p
+	}
+
+	http.Redirect(w, r, locURL, http.StatusFound)
+
 }
