@@ -57,6 +57,9 @@ func NewRouter() *chi.Mux {
 	r.Get("/absolute-redirect/{n:[0-9]+}", http.HandlerFunc(AbsoluteRedirectHandle))
 	r.Get("/relative-redirect/{n:[0-9]+}", http.HandlerFunc(RelativeRedirectHandle))
 
+	r.Get("/image", http.HandlerFunc(ImageAcceptHandle))
+	r.Get("/image/{format:svg|png|jpeg|webp}", http.HandlerFunc(ImageHandle))
+
 	//TODO: add documentation
 
 	return r
