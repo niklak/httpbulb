@@ -1,36 +1,34 @@
 package httpbulb
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
 
+// ImageHandle returns a simple image of the type specified in the URL path.
+// The supported image types are svg, jpeg, png, and webp.
 func ImageHandle(w http.ResponseWriter, r *http.Request) {
 
+	// Get the image format from the URL path parameter
 	imgFormat := chi.URLParam(r, "format")
 
 	var imgPath string
-
 	switch imgFormat {
-	case "svg":
-		imgPath = "assets/images/im.svg"
-	case "jpeg":
-		imgPath = "assets/images/im.jpeg"
-	case "png":
-		imgPath = "assets/images/im.png"
-	case "webp":
-		imgPath = "assets/images/im.webp"
+	case "svg", "jpeg", "png", "webp":
+		imgPath = fmt.Sprintf("assets/images/im.%s", imgFormat)
 	default:
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
+	// Serve the image file
 	http.ServeFile(w, r, imgPath)
 }
 
-// ImageAcceptHandle returns a simple image of the type suggest by the Accept header
+// ImageAcceptHandle returns an image based on the client's Accept header.
 func ImageAcceptHandle(w http.ResponseWriter, r *http.Request) {
 
 	accept := r.Header.Get("Accept")
