@@ -4,6 +4,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"strings"
 )
@@ -66,4 +67,22 @@ func writeJsonResponse(w http.ResponseWriter, code int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(data)
+}
+
+// serveFileFS serves a file from the given filesystem
+// this is a replacement of http.ServeFileFS because go 1.18 doesn't this function.
+func serveFileFS(w http.ResponseWriter, r *http.Request, fsys fs.FS, name string) {
+	fs := http.FS(assetsFS)
+	f, err := fs.Open(name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
+	fi, err := f.Stat()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.ServeContent(w, r, name, fi.ModTime(), f)
 }
