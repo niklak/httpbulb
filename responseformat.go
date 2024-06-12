@@ -125,3 +125,8 @@ func DenyHandle(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(angryASCII))
 }
+
+// Utf8Handle serves the utf8-encoded file
+func Utf8Handle(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "assets/utf8.html")
+}

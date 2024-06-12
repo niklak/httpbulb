@@ -157,6 +157,25 @@ func (s *ResponseFormatSuite) TestDeny() {
 	assert.Contains(s.T(), string(body), "YOU SHOULDN'T BE HERE\n")
 }
 
+func (s *ResponseFormatSuite) TestUtf8() {
+
+	req, err := http.NewRequest("GET", s.testServer.URL+"/encoding/utf8", nil)
+	assert.NoError(s.T(), err)
+
+	resp, err := s.client.Do(req)
+	assert.NoError(s.T(), err)
+	defer resp.Body.Close()
+
+	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	assert.Equal(s.T(), "text/html; charset=utf-8", resp.Header.Get("Content-Type"))
+
+	body, err := io.ReadAll(resp.Body)
+	assert.NoError(s.T(), err)
+
+	assert.Contains(s.T(), string(body), `ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ`)
+
+}
+
 func TestResponseFormatSuite(t *testing.T) {
 	suite.Run(t, new(ResponseFormatSuite))
 }
