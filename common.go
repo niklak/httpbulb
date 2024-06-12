@@ -1,6 +1,7 @@
 package httpbulb
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,6 +12,9 @@ const (
 	schemeHttp  = "http"
 	schemeHttps = "https"
 )
+
+//go:embed assets/*
+var assetsFS embed.FS
 
 func getURLScheme(r *http.Request) string {
 	if scheme := r.Header.Get("X-Forwarded-Proto"); scheme != "" {

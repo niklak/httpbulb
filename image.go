@@ -25,7 +25,7 @@ func ImageHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Serve the image file
-	http.ServeFile(w, r, imgPath)
+	http.ServeFileFS(w, r, assetsFS, imgPath)
 }
 
 // ImageAcceptHandle returns an image based on the client's Accept header.
@@ -50,6 +50,6 @@ func ImageAcceptHandle(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-	http.ServeFile(w, r, imgPath)
+	http.ServeFileFS(w, r, assetsFS, imgPath)
 
 }
