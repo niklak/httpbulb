@@ -126,7 +126,23 @@ func DenyHandle(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(angryASCII))
 }
 
-// Utf8Handle serves the utf8-encoded file
-func Utf8Handle(w http.ResponseWriter, r *http.Request) {
+// Utf8SampleHandle serves the utf8-encoded file
+func Utf8SampleHandle(w http.ResponseWriter, r *http.Request) {
 	http.ServeFileFS(w, r, assetsFS, "assets/utf8.html")
+}
+
+// HtmlSampleHandle serves the html file
+func HtmlSampleHandle(w http.ResponseWriter, r *http.Request) {
+	http.ServeFileFS(w, r, assetsFS, "assets/moby.html")
+}
+
+// JSONSampleHandle serves the json file
+func JSONSampleHandle(w http.ResponseWriter, r *http.Request) {
+	http.ServeFileFS(w, r, assetsFS, "assets/sample.json")
+}
+
+// XMLSampleHandle serves the xml file
+func XMLSampleHandle(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/xml")
+	http.ServeFileFS(w, r, assetsFS, "assets/sample.xml")
 }

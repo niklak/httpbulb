@@ -157,23 +157,58 @@ func (s *ResponseFormatSuite) TestDeny() {
 	assert.Contains(s.T(), string(body), "YOU SHOULDN'T BE HERE\n")
 }
 
-func (s *ResponseFormatSuite) TestUtf8() {
+func (s *ResponseFormatSuite) TestSamples() {
+	type testArgs struct {
+		apiPath          string
+		wantContentType  string
+		wantStatusCode   int
+		wantBodyFragment string
+	}
 
-	req, err := http.NewRequest("GET", s.testServer.URL+"/encoding/utf8", nil)
-	assert.NoError(s.T(), err)
+	tests := []testArgs{
+		{
+			apiPath:          "/encoding/utf8",
+			wantContentType:  "text/html; charset=utf-8",
+			wantStatusCode:   http.StatusOK,
+			wantBodyFragment: `ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ`,
+		},
+		{
+			apiPath:          "/html",
+			wantContentType:  "text/html; charset=utf-8",
+			wantStatusCode:   http.StatusOK,
+			wantBodyFragment: `<h1>Herman Melville - Moby-Dick</h1>`,
+		},
+		{
+			apiPath:          "/json",
+			wantContentType:  "application/json",
+			wantStatusCode:   http.StatusOK,
+			wantBodyFragment: `"title": "Sample Slide Show"`,
+		},
+		{
+			apiPath:          "/xml",
+			wantContentType:  "application/xml",
+			wantStatusCode:   http.StatusOK,
+			wantBodyFragment: `title="Sample Slide Show"`,
+		},
+	}
 
-	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
-	defer resp.Body.Close()
+	for _, tt := range tests {
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
-	assert.Equal(s.T(), "text/html; charset=utf-8", resp.Header.Get("Content-Type"))
+		req, err := http.NewRequest("GET", s.testServer.URL+tt.apiPath, nil)
+		assert.NoError(s.T(), err)
 
-	body, err := io.ReadAll(resp.Body)
-	assert.NoError(s.T(), err)
+		resp, err := s.client.Do(req)
+		assert.NoError(s.T(), err)
+		defer resp.Body.Close()
 
-	assert.Contains(s.T(), string(body), `ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ`)
+		assert.Equal(s.T(), tt.wantStatusCode, resp.StatusCode)
+		assert.Equal(s.T(), tt.wantContentType, resp.Header.Get("Content-Type"))
 
+		body, err := io.ReadAll(resp.Body)
+		assert.NoError(s.T(), err)
+
+		assert.Contains(s.T(), string(body), tt.wantBodyFragment)
+	}
 }
 
 func TestResponseFormatSuite(t *testing.T) {

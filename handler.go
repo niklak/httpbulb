@@ -24,7 +24,10 @@ func NewRouter() *chi.Mux {
 	r.Get("/deflate", http.HandlerFunc(DeflateHandle))
 	r.Get("/brotli", http.HandlerFunc(BrotliHandle))
 	r.Get("/deny", http.HandlerFunc(DenyHandle))
-	r.Get("/encoding/utf8", http.HandlerFunc(Utf8Handle))
+	r.Get("/encoding/utf8", http.HandlerFunc(Utf8SampleHandle))
+	r.Get("/html", http.HandlerFunc(HtmlSampleHandle))
+	r.Get("/json", http.HandlerFunc(JSONSampleHandle))
+	r.Get("/xml", http.HandlerFunc(XMLSampleHandle))
 
 	// TODO: add a handler that accepts a sequence of status codes
 	// and returns a random status code from it.
