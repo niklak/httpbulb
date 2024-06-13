@@ -46,7 +46,7 @@ func basicAuthHandle(w http.ResponseWriter, r *http.Request, errCode int) {
 	authenticated := user == userParam && passwd == passwdParam
 
 	if !ok || !authenticated {
-		w.Header().Set("WWW-Authenticate", `Basic realm="Fake Realm"`)
+		w.Header().Set("WWW-Authenticate", `Basic realm="httpbulb"`)
 		JsonError(w, "", errCode)
 		return
 	}

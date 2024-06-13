@@ -17,6 +17,20 @@ const (
 //go:embed assets/*
 var assetsFS embed.FS
 
+func TextError(w http.ResponseWriter, err string, code int) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(code)
+	fmt.Fprintln(w, err)
+}
+
+func JsonError(w http.ResponseWriter, err string, code int) {
+
+	if err == "" {
+		err = http.StatusText(code)
+	}
+	writeJsonResponse(w, code, map[string]string{"error": err})
+}
+
 func getURLScheme(r *http.Request) string {
 	if scheme := r.Header.Get("X-Forwarded-Proto"); scheme != "" {
 		return scheme
@@ -49,20 +63,6 @@ func getIP(r *http.Request) string {
 	return ip
 }
 
-func TextError(w http.ResponseWriter, err string, code int) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(code)
-	fmt.Fprintln(w, err)
-}
-
-func JsonError(w http.ResponseWriter, err string, code int) {
-
-	if err == "" {
-		err = http.StatusText(code)
-	}
-	writeJsonResponse(w, code, map[string]string{"error": err})
-}
-
 func writeJsonResponse(w http.ResponseWriter, code int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
@@ -72,7 +72,7 @@ func writeJsonResponse(w http.ResponseWriter, code int, data interface{}) {
 // serveFileFS serves a file from the given filesystem
 // this is a replacement of http.ServeFileFS because go 1.18 doesn't this function.
 func serveFileFS(w http.ResponseWriter, r *http.Request, fsys fs.FS, name string) {
-	fs := http.FS(assetsFS)
+	fs := http.FS(fsys)
 	f, err := fs.Open(name)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -85,4 +85,21 @@ func serveFileFS(w http.ResponseWriter, r *http.Request, fsys fs.FS, name string
 		return
 	}
 	http.ServeContent(w, r, name, fi.ModTime(), f)
+}
+
+func setCookie(w http.ResponseWriter, name, value string, secure bool) {
+	http.SetCookie(w, &http.Cookie{
+		Name:   name,
+		Value:  value,
+		Secure: secure,
+		Path:   "/",
+	})
+}
+
+func getCookie(r *http.Request, name string) (cookieValue string) {
+
+	if cookie, err := r.Cookie(name); err == nil {
+		cookieValue = cookie.Value
+	}
+	return
 }

@@ -39,6 +39,10 @@ func NewRouter() *chi.Mux {
 	r.Get("/hidden-basic-auth/{user}/{passwd}", http.HandlerFunc(HiddenBasicAuthHandle))
 	r.Get("/bearer", http.HandlerFunc(BearerAuthHandle))
 
+	r.Get("/digest-auth/{qop}/{user}/{passwd}", http.HandlerFunc(DigestAuthHandle))
+	r.Get("/digest-auth/{qop}/{user}/{passwd}/{algorithm}", http.HandlerFunc(DigestAuthHandle))
+	r.Get("/digest-auth/{qop}/{user}/{passwd}/{algorithm}/{stale_after}", http.HandlerFunc(DigestAuthHandle))
+
 	r.Get("/base64/{value}", http.HandlerFunc(Base64DecodeHandle))
 	r.Get("/stream/{n:[0-9]+}", http.HandlerFunc(StreamNMessagesHandle))
 	r.Get("/stream-bytes/{n:[0-9]+}", http.HandlerFunc(StreamRandomBytesHandle))
