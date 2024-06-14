@@ -69,7 +69,7 @@ func NewRouter() *chi.Mux {
 	r.Get("/image/{format:svg|png|jpeg|webp}", http.HandlerFunc(ImageHandle))
 
 	r.Get("/cache", http.HandlerFunc(CacheHandle))
-
+	r.Get("/cache/{value:[0-9]+}", http.HandlerFunc(CacheControlHandle))
 	//TODO: add documentation
 
 	return r

@@ -1,9 +1,11 @@
 package httpbulb
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
@@ -17,5 +19,16 @@ func CacheHandle(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Last-Modified", time.Now().Format(time.RFC1123))
 	w.Header().Set("ETag", uuid.New().String())
+
 	MethodsHandle(w, r)
+}
+
+// CacheControlHandle sets a Cache-Control header for n seconds
+func CacheControlHandle(w http.ResponseWriter, r *http.Request) {
+	value := chi.URLParam(r, "value")
+
+	w.Header().Set("Cache-Control", fmt.Sprintf("max-age=%s", value))
+
+	MethodsHandle(w, r)
+
 }
