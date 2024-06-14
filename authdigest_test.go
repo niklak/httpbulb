@@ -31,7 +31,7 @@ func (s *AuthDigestSuite) TearDownSuite() {
 	s.testServer.Close()
 }
 
-func (s *AuthDigestSuite) TestDigestAuthOk() {
+func (s *AuthDigestSuite) TestDigestAuth() {
 	type serverResponse struct {
 		Authenticated bool   `json:"authenticated"`
 		User          string `json:"user"`
