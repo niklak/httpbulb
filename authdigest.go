@@ -17,8 +17,8 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// DigestAuth handles digest authentication
-func DigestAuth(w http.ResponseWriter, r *http.Request) {
+// DigestAuthHandle prompts the user for authorization using HTTP Digest Auth.
+func DigestAuthHandle(w http.ResponseWriter, r *http.Request) {
 	user := chi.URLParam(r, "user")
 	passwd := chi.URLParam(r, "passwd")
 	algorithm := chi.URLParam(r, "algorithm")
@@ -26,6 +26,8 @@ func DigestAuth(w http.ResponseWriter, r *http.Request) {
 	staleAfter := chi.URLParam(r, "stale_after")
 
 	requireCookieParam := strings.ToLower(r.URL.Query().Get("require-cookie"))
+
+	secureCookie := getURLScheme(r) == schemeHttps
 
 	var requireCookie bool
 
@@ -50,8 +52,6 @@ func DigestAuth(w http.ResponseWriter, r *http.Request) {
 
 	credentials, err := parseDigestAuth(authorization)
 
-	secureCookie := getURLScheme(r) == schemeHttps
-
 	if err != nil || (requireCookie && !hasCookie) {
 		// 401 response
 		setCookie(w, "stale_after", staleAfter, secureCookie)
@@ -60,7 +60,7 @@ func DigestAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if requireCookie || getCookie(r, "fake") != "fake_value" {
+	if requireCookie && getCookie(r, "fake") != "fake_value" {
 		// 403 response
 		setCookie(w, "fake", "fake_value", secureCookie)
 		JsonError(w, "missing cookie set on challenge", http.StatusForbidden)
@@ -258,3 +258,5 @@ func nextStaleAfterValue(staleAfter string) string {
 	return "never"
 
 }
+
+// TODO: clean up this file

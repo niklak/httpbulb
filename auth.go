@@ -32,11 +32,6 @@ func BearerAuthHandle(w http.ResponseWriter, r *http.Request) {
 	writeJsonResponse(w, http.StatusOK, AuthResponse{Authenticated: true, Token: token})
 }
 
-// DigestAuthHandle prompts the user for authorization using HTTP Digest Auth.
-func DigestAuthHandle(w http.ResponseWriter, r *http.Request) {
-	JsonError(w, "Not implemented", http.StatusNotImplemented)
-}
-
 func basicAuthHandle(w http.ResponseWriter, r *http.Request, errCode int) {
 	userParam := chi.URLParam(r, "user")
 	passwdParam := chi.URLParam(r, "passwd")
