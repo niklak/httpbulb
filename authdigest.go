@@ -36,6 +36,9 @@ func DigestAuthHandle(w http.ResponseWriter, r *http.Request) {
 		requireCookie = true
 	}
 
+	// Actually `algorithm` path parameter is not relevant, because algorithm will be taken from Authorization header.
+	// It will be relevant only if the Authorization header is not set or is not Digest.
+
 	switch algorithm {
 	case "MD5", "SHA-256", "SHA-512":
 	default:
