@@ -1,6 +1,7 @@
 package httpbulb
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -31,4 +32,21 @@ func CacheControlHandle(w http.ResponseWriter, r *http.Request) {
 
 	MethodsHandle(w, r)
 
+}
+
+// ResponseHeadersHandle returns the response headers as JSON response
+func ResponseHeadersHandle(w http.ResponseWriter, r *http.Request) {
+
+	argHeaders := r.URL.Query()
+
+	for k, vv := range argHeaders {
+		for _, v := range vv {
+			w.Header().Add(k, v)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	responseHeaders := w.Header()
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(responseHeaders)
 }

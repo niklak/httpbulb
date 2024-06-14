@@ -97,12 +97,11 @@ func (s *AuthDigestSuite) TestDigestAuth() {
 		resp, err := s.client.Do(req)
 		assert.NoError(s.T(), err)
 
-		defer resp.Body.Close()
-
 		assert.Equal(s.T(), tt.wantStatusCode, resp.StatusCode)
 
 		body, err := io.ReadAll(resp.Body)
 		assert.NoError(s.T(), err)
+		resp.Body.Close()
 
 		result := &serverResponse{}
 
