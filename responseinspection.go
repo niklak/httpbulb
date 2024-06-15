@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -32,6 +33,31 @@ func CacheControlHandle(w http.ResponseWriter, r *http.Request) {
 
 	MethodsHandle(w, r)
 
+}
+
+// EtagHandle assumes the resource has the given etag and responds to If-None-Match and If-Match headers appropriately.
+func EtagHandle(w http.ResponseWriter, r *http.Request) {
+
+	etag := chi.URLParam(r, "etag")
+
+	ifNoneMatch := r.Header.Get("If-None-Match")
+	ifMatch := r.Header.Get("If-Match")
+
+	if ifNoneMatch != "" {
+		if strings.Contains(ifNoneMatch, etag) || strings.Contains(ifNoneMatch, "*") {
+			w.Header().Set("ETag", etag)
+			w.WriteHeader(http.StatusNotModified)
+			return
+
+		}
+	} else if ifMatch != "" {
+		if !strings.Contains(ifMatch, etag) && !strings.Contains(ifMatch, "*") {
+			w.WriteHeader(http.StatusPreconditionFailed)
+			return
+		}
+	}
+	w.Header().Set("ETag", etag)
+	MethodsHandle(w, r)
 }
 
 // ResponseHeadersHandle returns the response headers as JSON response

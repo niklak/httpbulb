@@ -152,6 +152,71 @@ func (s *ResponseInspectionSuite) TestCacheControl() {
 
 }
 
+func (s *ResponseInspectionSuite) TestEtag() {
+
+	type testArgs struct {
+		ifNoneMatch string
+		ifMatch     string
+		wantStatus  int
+	}
+	etag := uuid.New().String()
+
+	tests := []testArgs{
+		{
+			wantStatus: http.StatusOK,
+		},
+		{
+			ifNoneMatch: etag,
+			wantStatus:  http.StatusNotModified,
+		},
+		{
+			ifNoneMatch: "*",
+			wantStatus:  http.StatusNotModified,
+		},
+		{
+			ifNoneMatch: uuid.NewString(),
+			wantStatus:  http.StatusOK,
+		},
+		{
+			ifMatch:    etag,
+			wantStatus: http.StatusOK,
+		},
+		{
+			ifMatch:    "*",
+			wantStatus: http.StatusOK,
+		},
+		{
+			ifMatch:    uuid.NewString(),
+			wantStatus: http.StatusPreconditionFailed,
+		},
+	}
+	for _, tt := range tests {
+
+		apiURL := s.testServer.URL + "/etag/" + etag
+
+		req, err := http.NewRequest("GET", apiURL, nil)
+		assert.NoError(s.T(), err)
+
+		if tt.ifNoneMatch != "" {
+			req.Header.Set("If-None-Match", tt.ifNoneMatch)
+		}
+		if tt.ifMatch != "" {
+			req.Header.Set("If-Match", tt.ifMatch)
+		}
+
+		resp, err := s.client.Do(req)
+		assert.NoError(s.T(), err)
+
+		io.Copy(io.Discard, resp.Body)
+		assert.NoError(s.T(), err)
+
+		resp.Body.Close()
+
+		assert.Equal(s.T(), tt.wantStatus, resp.StatusCode)
+	}
+
+}
+
 func TestResponseInspectionSuite(t *testing.T) {
 	suite.Run(t, new(ResponseInspectionSuite))
 }

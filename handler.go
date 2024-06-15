@@ -72,6 +72,7 @@ func NewRouter() *chi.Mux {
 	r.Get("/cache/{value:[0-9]+}", http.HandlerFunc(CacheControlHandle))
 	r.Get("/response-headers", http.HandlerFunc(ResponseHeadersHandle))
 	r.Post("/response-headers", http.HandlerFunc(ResponseHeadersHandle))
+	r.Get("/etag/{etag}", http.HandlerFunc(EtagHandle))
 	//TODO: add documentation
 
 	return r
