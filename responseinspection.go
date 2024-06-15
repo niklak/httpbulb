@@ -28,7 +28,7 @@ func CacheHandle(w http.ResponseWriter, r *http.Request) {
 func CacheControlHandle(w http.ResponseWriter, r *http.Request) {
 	value := chi.URLParam(r, "value")
 
-	w.Header().Set("Cache-Control", fmt.Sprintf("max-age=%s", value))
+	w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%s", value))
 
 	MethodsHandle(w, r)
 

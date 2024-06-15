@@ -71,6 +71,7 @@ func NewRouter() *chi.Mux {
 	r.Get("/cache", http.HandlerFunc(CacheHandle))
 	r.Get("/cache/{value:[0-9]+}", http.HandlerFunc(CacheControlHandle))
 	r.Get("/response-headers", http.HandlerFunc(ResponseHeadersHandle))
+	r.Post("/response-headers", http.HandlerFunc(ResponseHeadersHandle))
 	//TODO: add documentation
 
 	return r
