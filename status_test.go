@@ -2,8 +2,12 @@ package httpbulb
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,76 +32,68 @@ func (s *StatusCodeSuite) TearDownSuite() {
 	s.testServer.Close()
 }
 
-func (s *StatusCodeSuite) TestGetOK() {
+func (s *StatusCodeSuite) TestNotACode() {
+	testURL := fmt.Sprintf("%s/status/bad", s.testServer.URL)
 
-	resp, err := s.requestStatusCode("GET", http.StatusOK)
+	req, err := http.NewRequest("GET", testURL, nil)
 	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
-}
-
-func (s *StatusCodeSuite) TestPostOK() {
-
-	resp, err := s.requestStatusCode("POST", http.StatusOK)
-	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
-}
-
-func (s *StatusCodeSuite) TestPutOK() {
-
-	resp, err := s.requestStatusCode("PUT", http.StatusOK)
-	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
-}
-
-func (s *StatusCodeSuite) TestPatchOK() {
-
-	resp, err := s.requestStatusCode("PATCH", http.StatusOK)
-	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
-}
-
-func (s *StatusCodeSuite) TestDeleteOK() {
-
-	resp, err := s.requestStatusCode("DELETE", http.StatusOK)
-	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
-}
-
-func (s *StatusCodeSuite) TestBadMethod() {
-
-	resp, err := s.requestStatusCode("Get", http.StatusOK)
-	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), http.StatusMethodNotAllowed, resp.StatusCode)
-}
-
-func (s *StatusCodeSuite) TestBadStatusCode() {
-	// not found because status code is not matching regex
-	resp, err := s.requestStatusCode("GET", 667)
-	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), http.StatusNotFound, resp.StatusCode)
-}
-
-func (s *StatusCodeSuite) TestCustomCode() {
-	resp, err := s.requestStatusCode("GET", 444)
-	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), 444, resp.StatusCode)
-
-}
-
-func (s *StatusCodeSuite) requestStatusCode(method string, code int) (*http.Response, error) {
-	testURL := fmt.Sprintf("%s/status/%d", s.testServer.URL, code)
-
-	req, err := http.NewRequest(method, testURL, nil)
-	if err != nil {
-		return nil, err
-	}
-
 	resp, err := s.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
+	assert.NoError(s.T(), err)
+	io.Copy(io.Discard, resp.Body)
 	resp.Body.Close()
-	return resp, nil
+
+	assert.Equal(s.T(), http.StatusBadRequest, resp.StatusCode)
+}
+
+func (s *StatusCodeSuite) TestStatusCodes() {
+
+	type testArgs struct {
+		method         string
+		encodePath     bool
+		statusCodes    []int
+		wantStatusCode int
+	}
+
+	tests := []testArgs{
+		{method: "GET", statusCodes: []int{100}, wantStatusCode: 400},
+		{method: "GET", statusCodes: []int{200, 403, 500}, encodePath: true},
+		{method: "DELETE", statusCodes: []int{200, 403, 500}},
+		{method: "PATCH", statusCodes: []int{200, 403, 500}},
+		{method: "POST", statusCodes: []int{200, 403, 500}},
+		{method: "PUT", statusCodes: []int{200, 403, 500}},
+		{method: "GET", statusCodes: []int{444}},
+		{method: "GET", statusCodes: []int{600}, wantStatusCode: 400},
+		{method: "Get", statusCodes: []int{200, 403, 500}, wantStatusCode: 405},
+	}
+	for _, tt := range tests {
+		var codes []string
+
+		for _, code := range tt.statusCodes {
+			codes = append(codes, strconv.Itoa(code))
+		}
+		codesPath := strings.Join(codes, ",")
+
+		if tt.encodePath {
+			codesPath = url.QueryEscape(codesPath)
+		}
+
+		testURL := fmt.Sprintf("%s/status/%s", s.testServer.URL, codesPath)
+
+		req, err := http.NewRequest(tt.method, testURL, nil)
+		assert.NoError(s.T(), err)
+		resp, err := s.client.Do(req)
+		assert.NoError(s.T(), err)
+		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+
+		if tt.wantStatusCode != 0 {
+			assert.Equal(s.T(), tt.wantStatusCode, resp.StatusCode)
+			return
+		}
+		assert.Contains(s.T(), tt.statusCodes, resp.StatusCode)
+
+	}
+
 }
 
 func TestStatusCodeSuite(t *testing.T) {
