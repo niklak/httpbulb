@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -37,25 +36,25 @@ func (s *RequestInspectionSuite) TestHeaders() {
 	}
 
 	req, err := http.NewRequest("GET", s.testServer.URL+"/headers", nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	req.Header.Set("X-Test-Header", "test")
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	result := &serverResponse{}
 
 	err = json.Unmarshal(body, result)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
-	assert.Equal(s.T(), "test", result.Headers.Get("X-Test-Header"))
+	s.Require().Equal("test", result.Headers.Get("X-Test-Header"))
 
 }
 
@@ -68,25 +67,25 @@ func (s *RequestInspectionSuite) TestUserAgent() {
 	userAgent := "bulb/0.1"
 
 	req, err := http.NewRequest("GET", s.testServer.URL+"/user-agent", nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	result := &serverResponse{}
 
 	err = json.Unmarshal(body, result)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
-	assert.Equal(s.T(), userAgent, result.UserAgent)
+	s.Require().Equal(userAgent, result.UserAgent)
 }
 
 func (s *RequestInspectionSuite) TestIP() {
@@ -96,23 +95,23 @@ func (s *RequestInspectionSuite) TestIP() {
 	}
 
 	req, err := http.NewRequest("GET", s.testServer.URL+"/ip", nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	result := &serverResponse{}
 
 	err = json.Unmarshal(body, result)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
-	assert.True(s.T(), strings.HasPrefix(result.Origin, "127.0.0.1"))
+	s.Require().True(strings.HasPrefix(result.Origin, "127.0.0.1"))
 }
 
 func TestRequestInspectionSuite(t *testing.T) {

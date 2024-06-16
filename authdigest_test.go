@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -82,7 +81,7 @@ func (s *AuthDigestSuite) TestDigestAuth() {
 		auth := strings.Join(credentialList, ", ")
 
 		req, err := http.NewRequest("GET", addr, nil)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
 		req.Header.Add("Authorization", fmt.Sprintf(`Digest %s`, auth))
 
@@ -95,23 +94,21 @@ func (s *AuthDigestSuite) TestDigestAuth() {
 		}
 
 		resp, err := s.client.Do(req)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
-		assert.Equal(s.T(), tt.wantStatusCode, resp.StatusCode)
+		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
 
 		body, err := io.ReadAll(resp.Body)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 		resp.Body.Close()
 
 		result := &serverResponse{}
 
 		if len(body) > 0 {
 			err = json.Unmarshal(body, result)
-			assert.NoError(s.T(), err)
-
+			s.Require().NoError(err)
 		}
-
-		assert.Equal(s.T(), tt.wantAuth, result.Authenticated)
+		s.Require().Equal(tt.wantAuth, result.Authenticated)
 	}
 
 }

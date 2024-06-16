@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -36,13 +36,13 @@ func (s *StatusCodeSuite) TestNotACode() {
 	testURL := fmt.Sprintf("%s/status/bad", s.testServer.URL)
 
 	req, err := http.NewRequest("GET", testURL, nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 	io.Copy(io.Discard, resp.Body)
 	resp.Body.Close()
 
-	assert.Equal(s.T(), http.StatusBadRequest, resp.StatusCode)
+	s.Require().Equal(http.StatusBadRequest, resp.StatusCode)
 }
 
 func (s *StatusCodeSuite) TestStatusCodes() {
@@ -80,17 +80,17 @@ func (s *StatusCodeSuite) TestStatusCodes() {
 		testURL := fmt.Sprintf("%s/status/%s", s.testServer.URL, codesPath)
 
 		req, err := http.NewRequest(tt.method, testURL, nil)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 		resp, err := s.client.Do(req)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
 
 		if tt.wantStatusCode != 0 {
-			assert.Equal(s.T(), tt.wantStatusCode, resp.StatusCode)
+			s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
 			return
 		}
-		assert.Contains(s.T(), tt.statusCodes, resp.StatusCode)
+		require.Contains(s.T(), tt.statusCodes, resp.StatusCode)
 
 	}
 

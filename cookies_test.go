@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -41,23 +40,23 @@ func (s *CookiesSuite) TestCookies() {
 	apiURL := fmt.Sprintf("%s/cookies", s.testServer.URL)
 
 	req, err := http.NewRequest("GET", apiURL, nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	req.Header.Set("Cookie", "k1=v1; k2=v2")
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	defer resp.Body.Close()
 
 	res := &serverResponse{}
 
 	err = json.NewDecoder(resp.Body).Decode(res)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	expected := map[string][]string{"k1": {"v1"}, "k2": {"v2"}}
 
-	assert.Equal(s.T(), expected, res.Cookies)
+	s.Require().Equal(expected, res.Cookies)
 
 }
 
@@ -74,23 +73,23 @@ func (s *CookiesSuite) TestCookiesList() {
 	apiURL := fmt.Sprintf("%s/cookies-list", s.testServer.URL)
 
 	req, err := http.NewRequest("GET", apiURL, nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	req.Header.Set("Cookie", "k1=v1; k2=v2; k1=v3")
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	defer resp.Body.Close()
 
 	res := &serverResponse{}
 
 	err = json.NewDecoder(resp.Body).Decode(res)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	expected := []*cookie{{"k1", "v1"}, {"k2", "v2"}, {"k1", "v3"}}
 
-	assert.Equal(s.T(), expected, res.Cookies)
+	s.Require().Equal(expected, res.Cookies)
 
 }
 
@@ -100,27 +99,27 @@ func (s *CookiesSuite) TestSetCookies() {
 	}
 
 	apiU, err := url.Parse(s.testServer.URL)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	apiU = apiU.ResolveReference(
 		&url.URL{Path: "/cookies/set", RawQuery: "k3=v"},
 	)
 
 	req, err := http.NewRequest("GET", apiU.String(), nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	defer resp.Body.Close()
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 
 	res := &serverResponse{}
 
 	err = json.NewDecoder(resp.Body).Decode(res)
-	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), "v", res.Cookies["k3"][0])
+	s.Require().NoError(err)
+	s.Require().Equal("v", res.Cookies["k3"][0])
 
 }
 
@@ -130,25 +129,25 @@ func (s *CookiesSuite) TestSetCookie() {
 	}
 
 	apiU, err := url.Parse(s.testServer.URL)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	apiU = apiU.ResolveReference(&url.URL{Path: "/cookies/set/k4/v"})
 
 	req, err := http.NewRequest("GET", apiU.String(), nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	defer resp.Body.Close()
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 
 	res := &serverResponse{}
 
 	err = json.NewDecoder(resp.Body).Decode(res)
-	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), "v", res.Cookies["k4"][0])
+	s.Require().NoError(err)
+	s.Require().Equal("v", res.Cookies["k4"][0])
 
 }
 
@@ -158,7 +157,7 @@ func (s *CookiesSuite) TestDeleteCookies() {
 	}
 
 	apiU, err := url.Parse(s.testServer.URL)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	apiU = apiU.ResolveReference(
 		&url.URL{Path: "/cookies/delete", RawQuery: "k5=v"},
@@ -170,23 +169,23 @@ func (s *CookiesSuite) TestDeleteCookies() {
 	)
 
 	req, err := http.NewRequest("GET", apiU.String(), nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	defer resp.Body.Close()
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 
 	res := &serverResponse{}
 
 	err = json.NewDecoder(resp.Body).Decode(res)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	_, isPresent := res.Cookies["k5"]
 
-	assert.False(s.T(), isPresent)
+	s.Require().False(isPresent)
 
 }
 

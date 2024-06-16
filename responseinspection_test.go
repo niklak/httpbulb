@@ -36,7 +36,7 @@ func (s *ResponseInspectionSuite) TearDownSuite() {
 func (s *ResponseInspectionSuite) TestResponseHeaders() {
 
 	apiURL, err := url.Parse(s.testServer.URL)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 	apiURL.Path = "/response-headers"
 
 	query := url.Values{}
@@ -46,19 +46,19 @@ func (s *ResponseInspectionSuite) TestResponseHeaders() {
 	apiURL.RawQuery = query.Encode()
 
 	req, err := http.NewRequest("GET", apiURL.String(), nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	body, err := io.ReadAll(resp.Body)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 	resp.Body.Close()
 
 	result := http.Header{}
 
 	err = json.Unmarshal(body, &result)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	expectedHeaderValue := []string{"1", "2", "3"}
 	assert.Subset(s.T(), expectedHeaderValue, result["X-Test-Header"])
@@ -96,7 +96,7 @@ func (s *ResponseInspectionSuite) TestCache() {
 		apiURL := s.testServer.URL + "/cache"
 
 		req, err := http.NewRequest("GET", apiURL, nil)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
 		if tt.ifModifiedSince != "" {
 			req.Header.Set("If-Modified-Since", tt.ifModifiedSince)
@@ -106,13 +106,13 @@ func (s *ResponseInspectionSuite) TestCache() {
 		}
 
 		resp, err := s.client.Do(req)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
 		io.Copy(io.Discard, resp.Body)
 
 		resp.Body.Close()
 
-		assert.Equal(s.T(), tt.wantStatusCode, resp.StatusCode)
+		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
 	}
 
 }
@@ -127,28 +127,28 @@ func (s *ResponseInspectionSuite) TestCacheControl() {
 	apiURL := s.testServer.URL + "/cache/" + value
 
 	req, err := http.NewRequest("GET", apiURL, nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	body, err := io.ReadAll(resp.Body)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp.Body.Close()
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 
 	result := &serverResponse{}
 
 	err = json.Unmarshal(body, result)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
-	assert.Equal(s.T(), apiURL, result.URL)
+	s.Require().Equal(apiURL, result.URL)
 
 	expectedCacheControl := fmt.Sprintf("public, max-age=%s", value)
 
-	assert.Equal(s.T(), expectedCacheControl, resp.Header.Get("Cache-Control"))
+	s.Require().Equal(expectedCacheControl, resp.Header.Get("Cache-Control"))
 
 }
 
@@ -195,7 +195,7 @@ func (s *ResponseInspectionSuite) TestEtag() {
 		apiURL := s.testServer.URL + "/etag/" + etag
 
 		req, err := http.NewRequest("GET", apiURL, nil)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
 		if tt.ifNoneMatch != "" {
 			req.Header.Set("If-None-Match", tt.ifNoneMatch)
@@ -205,14 +205,14 @@ func (s *ResponseInspectionSuite) TestEtag() {
 		}
 
 		resp, err := s.client.Do(req)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
 		io.Copy(io.Discard, resp.Body)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
 		resp.Body.Close()
 
-		assert.Equal(s.T(), tt.wantStatus, resp.StatusCode)
+		s.Require().Equal(tt.wantStatus, resp.StatusCode)
 	}
 
 }

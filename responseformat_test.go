@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/andybalholm/brotli"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -40,21 +39,21 @@ func (s *ResponseFormatSuite) TestGzip() {
 	}
 
 	req, err := http.NewRequest("GET", s.testServer.URL+"/gzip", nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 	defer resp.Body.Close()
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 	result := &serverResponse{}
 
 	body, err := io.ReadAll(resp.Body)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	err = json.Unmarshal(body, result)
-	assert.NoError(s.T(), err)
-	assert.True(s.T(), result.Gzipped)
+	s.Require().NoError(err)
+	s.Require().True(result.Gzipped)
 
 }
 
@@ -67,25 +66,25 @@ func (s *ResponseFormatSuite) TestDeflate() {
 	}
 
 	req, err := http.NewRequest("GET", s.testServer.URL+"/deflate", nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 	defer resp.Body.Close()
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 	result := &serverResponse{}
 
 	reader, err := zlib.NewReader(resp.Body)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	body, err := io.ReadAll(reader)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 	reader.Close()
 
 	err = json.Unmarshal(body, result)
-	assert.NoError(s.T(), err)
-	assert.True(s.T(), result.Deflated)
+	s.Require().NoError(err)
+	s.Require().True(result.Deflated)
 
 }
 
@@ -98,63 +97,63 @@ func (s *ResponseFormatSuite) TestBrotli() {
 	}
 
 	req, err := http.NewRequest("GET", s.testServer.URL+"/brotli", nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 	defer resp.Body.Close()
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 	result := &serverResponse{}
 
 	reader := brotli.NewReader(resp.Body)
 
 	body, err := io.ReadAll(reader)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	err = json.Unmarshal(body, result)
-	assert.NoError(s.T(), err)
-	assert.True(s.T(), result.Brotli)
+	s.Require().NoError(err)
+	s.Require().True(result.Brotli)
 
 }
 
 func (s *ResponseFormatSuite) TestRobots() {
 
 	req, err := http.NewRequest("GET", s.testServer.URL+"/robots.txt", nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 	defer resp.Body.Close()
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 
 	body, err := io.ReadAll(resp.Body)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	expectedBody := []byte(`
 User-agent: *
 Disallow: /deny
 	`)
 
-	assert.Equal(s.T(), expectedBody, body)
+	s.Require().Equal(expectedBody, body)
 }
 
 func (s *ResponseFormatSuite) TestDeny() {
 
 	req, err := http.NewRequest("GET", s.testServer.URL+"/deny", nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 	defer resp.Body.Close()
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 
 	body, err := io.ReadAll(resp.Body)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
-	assert.Contains(s.T(), string(body), "YOU SHOULDN'T BE HERE\n")
+	s.Require().Contains(string(body), "YOU SHOULDN'T BE HERE\n")
 }
 
 func (s *ResponseFormatSuite) TestSamples() {
@@ -195,19 +194,19 @@ func (s *ResponseFormatSuite) TestSamples() {
 	for _, tt := range tests {
 
 		req, err := http.NewRequest("GET", s.testServer.URL+tt.apiPath, nil)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
 		resp, err := s.client.Do(req)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 		defer resp.Body.Close()
 
-		assert.Equal(s.T(), tt.wantStatusCode, resp.StatusCode)
-		assert.Equal(s.T(), tt.wantContentType, resp.Header.Get("Content-Type"))
+		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
+		s.Require().Equal(tt.wantContentType, resp.Header.Get("Content-Type"))
 
 		body, err := io.ReadAll(resp.Body)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
-		assert.Contains(s.T(), string(body), tt.wantBodyFragment)
+		s.Require().Contains(string(body), tt.wantBodyFragment)
 	}
 }
 

@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -46,10 +45,10 @@ func (s *DynamicSuite) TestStream() {
 	apiURL := fmt.Sprintf("%s/stream/%d", s.testServer.URL, numMessages)
 
 	req, err := http.NewRequest("GET", apiURL, nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	defer resp.Body.Close()
 
@@ -64,9 +63,9 @@ func (s *DynamicSuite) TestStream() {
 		}
 	}
 
-	assert.NoError(s.T(), scanner.Err())
+	s.Require().NoError(scanner.Err())
 
-	assert.Equal(s.T(), numMessages, totalMsg)
+	s.Require().Equal(numMessages, totalMsg)
 
 }
 
@@ -77,18 +76,18 @@ func (s *DynamicSuite) TestDelay() {
 	started := time.Now()
 
 	req, err := http.NewRequest("GET", apiURL, nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 
 	defer resp.Body.Close()
 
 	elapsed := time.Since(started)
 	delay := time.Second * time.Duration(d)
-	assert.GreaterOrEqual(s.T(), elapsed, delay)
+	s.Require().GreaterOrEqual(elapsed, delay)
 
 }
 
@@ -99,19 +98,19 @@ func (s *DynamicSuite) TestBase64Decode() {
 	apiURL := fmt.Sprintf("%s/base64/%s", s.testServer.URL, encoded)
 
 	req, err := http.NewRequest("GET", apiURL, nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
-	assert.Equal(s.T(), "base64-decode test\n", string(body))
+	s.Require().Equal("base64-decode test\n", string(body))
 
 }
 
@@ -123,19 +122,19 @@ func (s *DynamicSuite) TestRandomBytes() {
 		apiURL := fmt.Sprintf("%s/bytes/%d", s.testServer.URL, numBytes)
 
 		req, err := http.NewRequest("GET", apiURL, nil)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
 		resp, err := s.client.Do(req)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
-		assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+		s.Require().Equal(http.StatusOK, resp.StatusCode)
 
 		defer resp.Body.Close()
 
 		body, err := io.ReadAll(resp.Body)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
-		assert.Equal(s.T(), numBytes, len(body))
+		s.Require().Equal(numBytes, len(body))
 	}
 
 }
@@ -155,23 +154,23 @@ func (s *DynamicSuite) TestStreamRandomBytes() {
 		apiURL := fmt.Sprintf("%s/stream-bytes/%d?chunk_size=%d", s.testServer.URL, numBytes, chunkSize)
 
 		req, err := http.NewRequest("GET", apiURL, nil)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
 		resp, err := s.client.Do(req)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
-		assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+		s.Require().Equal(http.StatusOK, resp.StatusCode)
 
 		defer resp.Body.Close()
 
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
 		body, err := io.ReadAll(resp.Body)
 
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 		receivedBytes := len(body)
 
-		assert.Equal(s.T(), numBytes, receivedBytes)
+		s.Require().Equal(numBytes, receivedBytes)
 	}
 }
 
@@ -180,21 +179,21 @@ func (s *DynamicSuite) TestUUID() {
 	apiURL := fmt.Sprintf("%s/uuid", s.testServer.URL)
 
 	req, err := http.NewRequest("GET", apiURL, nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 
 	defer resp.Body.Close()
 
 	var uuidResp UUIDResponse
 	err = json.NewDecoder(resp.Body).Decode(&uuidResp)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	_, err = uuid.Parse(uuidResp.UUID)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 }
 
@@ -209,26 +208,26 @@ func (s *DynamicSuite) TestDrip() {
 	)
 
 	req, err := http.NewRequest("GET", apiURL, nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	started := time.Now()
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	elapsed := time.Since(started)
 	expected := time.Second * (time.Duration(delay) + time.Duration(dur))
 
-	assert.LessOrEqual(s.T(), expected, elapsed)
+	s.Require().LessOrEqual(expected, elapsed)
 
-	assert.Equal(s.T(), strings.Repeat("*", numBytes), string(body))
+	s.Require().Equal(strings.Repeat("*", numBytes), string(body))
 
 }
 
@@ -240,21 +239,21 @@ func (s *DynamicSuite) TestLinkPage() {
 	apiURL := fmt.Sprintf("%s/links/%d/%d", s.testServer.URL, numLinks, offset)
 
 	req, err := http.NewRequest("GET", apiURL, nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	expected := `<html><head><title>Links</title></head><body><a href='/links/3/0'>0</a> 1 <a href='/links/3/2'>2</a> </body></html>`
 
-	assert.Equal(s.T(), expected, string(body))
+	s.Require().Equal(expected, string(body))
 }
 
 func (s *DynamicSuite) TestLinks() {
@@ -264,21 +263,21 @@ func (s *DynamicSuite) TestLinks() {
 	apiURL := fmt.Sprintf("%s/links/%d", s.testServer.URL, numLinks)
 
 	req, err := http.NewRequest("GET", apiURL, nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
-	assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
+	s.Require().Equal(http.StatusOK, resp.StatusCode)
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	expected := `<html><head><title>Links</title></head><body>0 <a href='/links/3/1'>1</a> <a href='/links/3/2'>2</a> </body></html>`
 
-	assert.Equal(s.T(), expected, string(body))
+	s.Require().Equal(expected, string(body))
 }
 
 func (s *DynamicSuite) TestRange() {
@@ -290,19 +289,19 @@ func (s *DynamicSuite) TestRange() {
 	apiURL := fmt.Sprintf("%s/range/%d?duration=%d", s.testServer.URL, numBytes, dur)
 
 	req, err := http.NewRequest("GET", apiURL, nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	req.Header.Set("Range", rangeHeader)
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
-	assert.Equal(s.T(), http.StatusPartialContent, resp.StatusCode)
+	s.Require().Equal(http.StatusPartialContent, resp.StatusCode)
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	expectedHeaders := http.Header{
 		"Etag":           []string{fmt.Sprintf("range%d", numBytes)},
@@ -310,8 +309,8 @@ func (s *DynamicSuite) TestRange() {
 		"Content-Range":  []string{"bytes 10-20/30"},
 	}
 
-	assert.Equal(s.T(), "klmnopqrstu", string(body))
-	assert.Subset(s.T(), resp.Header, expectedHeaders)
+	s.Require().Equal("klmnopqrstu", string(body))
+	s.Require().Subset(resp.Header, expectedHeaders)
 
 }
 

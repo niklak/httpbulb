@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -54,7 +54,7 @@ func (s *RedirectSuite) TestRedirectTo() {
 			dstURL := s.testServer.URL + "/" + strings.ToLower(method)
 
 			apiURL, err := url.Parse(s.testServer.URL)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			apiURL.Path = "/redirect-to"
 			var body io.Reader
 			switch method {
@@ -71,14 +71,14 @@ func (s *RedirectSuite) TestRedirectTo() {
 				headers.Set("Content-Type", "application/x-www-form-urlencoded")
 			}
 			req, err := http.NewRequest(method, apiURL.String(), body)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			req.Header = headers
 			resp, err := s.clientNoRedirect.Do(req)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			io.Copy(io.Discard, resp.Body)
 			resp.Body.Close()
-			assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode)
-			assert.Equal(t, dstURL, resp.Header.Get("Location"))
+			require.Equal(t, http.StatusMovedPermanently, resp.StatusCode)
+			require.Equal(t, dstURL, resp.Header.Get("Location"))
 		})
 	}
 
@@ -135,14 +135,14 @@ func (s *RedirectSuite) TestRedirects() {
 
 	for _, tt := range tests {
 		req, err := http.NewRequest(http.MethodGet, tt.apiURL, nil)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 		resp, err := s.clientOneRedirect.Do(req)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
-		assert.Equal(s.T(), tt.wantStatusCode, resp.StatusCode)
+		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
 		// as this test follows only for one redirect, the location should be: /relative-redirect/2
-		assert.Equal(s.T(), tt.wantLocation, resp.Header.Get("Location"))
+		s.Require().Equal(tt.wantLocation, resp.Header.Get("Location"))
 	}
 }
 

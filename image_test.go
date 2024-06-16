@@ -6,7 +6,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -45,16 +44,16 @@ func (s *ImageSuite) TestImage() {
 	}
 	for _, tt := range tests {
 		req, err := http.NewRequest("GET", s.testServer.URL+tt.apiPath, nil)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
 		resp, err := s.client.Do(req)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
 		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
 
-		assert.Equal(s.T(), tt.wantStatusCode, resp.StatusCode)
-		assert.Equal(s.T(), tt.wantContentType, resp.Header.Get("Content-Type"))
+		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
+		s.Require().Equal(tt.wantContentType, resp.Header.Get("Content-Type"))
 	}
 
 }
@@ -77,17 +76,17 @@ func (s *ImageSuite) TestImageAccept() {
 	}
 	for _, tt := range tests {
 		req, err := http.NewRequest("GET", s.testServer.URL+"/image", nil)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 		req.Header.Set("Accept", tt.accept)
 
 		resp, err := s.client.Do(req)
-		assert.NoError(s.T(), err)
+		s.Require().NoError(err)
 
 		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
 
-		assert.Equal(s.T(), tt.wantStatusCode, resp.StatusCode)
-		assert.Equal(s.T(), tt.wantContentType, resp.Header.Get("Content-Type"))
+		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
+		s.Require().Equal(tt.wantContentType, resp.Header.Get("Content-Type"))
 	}
 
 }
