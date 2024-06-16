@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var httpClient *http.Client
@@ -43,30 +43,30 @@ func Test_Get(t *testing.T) {
 	testUrl := fmt.Sprintf("%s/get?k=v", testServer.URL)
 
 	req, err := http.NewRequest("GET", testUrl, nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	resp, err := httpClient.Do(req)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	// in this case we require either a result or a response
 	result := new(bulbResponse)
 
 	err = json.Unmarshal(body, result)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// ensure that result has the expected value
-	assert.Equal(t, testUrl, result.URL)
+	require.Equal(t, testUrl, result.URL)
 
 	expectedArgs := url.Values{"k": []string{"v"}}
 
-	assert.Equal(t, expectedArgs, result.Args)
+	require.Equal(t, expectedArgs, result.Args)
 }
 
 func Test_MethodNotAllowed(t *testing.T) {
@@ -81,12 +81,12 @@ func Test_MethodNotAllowed(t *testing.T) {
 	testUrl := fmt.Sprintf("%s/get?k=v", testServer.URL)
 
 	req, err := http.NewRequest("POST", testUrl, nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	resp, err := httpClient.Do(req)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, http.StatusMethodNotAllowed, resp.StatusCode)
+	require.Equal(t, http.StatusMethodNotAllowed, resp.StatusCode)
 }
 
 func Test_Form(t *testing.T) {
@@ -108,26 +108,26 @@ func Test_Form(t *testing.T) {
 		testURL := fmt.Sprintf("%s/%s", testServer.URL, method)
 
 		req, err := http.NewRequest(strings.ToUpper(method), testURL, strings.NewReader("k=v"))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 		resp, err := httpClient.Do(req)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer resp.Body.Close()
 
 		body, err := io.ReadAll(resp.Body)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		// in this case we require either a result or a response
 		result := new(bulbResponse)
 
 		json.Unmarshal(body, result)
 		// ensure that result has the expected value
-		assert.Equal(t, testURL, result.URL)
+		require.Equal(t, testURL, result.URL)
 
 		expectedForm := url.Values{"k": []string{"v"}}
 
-		assert.Equal(t, expectedForm, result.Form)
+		require.Equal(t, expectedForm, result.Form)
 	}
 
 }
@@ -154,26 +154,26 @@ func Test_JSON(t *testing.T) {
 			testURL,
 			strings.NewReader(`{"k":"v"}`),
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := httpClient.Do(req)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		defer resp.Body.Close()
 
 		body, err := io.ReadAll(resp.Body)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		// in this case we require either a result or a response
 		result := new(bulbResponse)
 
 		json.Unmarshal(body, result)
 		// ensure that result has the expected value
-		assert.Equal(t, testURL, result.URL)
+		require.Equal(t, testURL, result.URL)
 
 		expectedJSON := map[string]string{"k": "v"}
 
-		assert.Equal(t, expectedJSON, result.JSON)
+		require.Equal(t, expectedJSON, result.JSON)
 	}
 }
 
@@ -196,41 +196,41 @@ func Test_PostMultipart(t *testing.T) {
 	buf := new(bytes.Buffer)
 	w := multipart.NewWriter(buf)
 	part, err := w.CreateFormFile("file", "file.txt")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = part.Write([]byte("file content"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = w.WriteField("k", "v")
-	assert.NoError(t, err)
-	assert.NoError(t, w.Close())
+	require.NoError(t, err)
+	require.NoError(t, w.Close())
 
 	req, err := http.NewRequest("POST", testURL, buf)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	req.Header.Set("Content-Type", w.FormDataContentType())
 
 	resp, err := httpClient.Do(req)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	// in this case we require either a result or a response
 	result := new(bulbResponse)
 
 	err = json.Unmarshal(body, result)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// ensure that result has the expected value
-	assert.Equal(t, testURL, result.URL)
+	require.Equal(t, testURL, result.URL)
 
 	expectedForm := url.Values{"k": []string{"v"}}
 
-	assert.Equal(t, expectedForm, result.Form)
+	require.Equal(t, expectedForm, result.Form)
 
 	expectedFiles := map[string][]string{"file": {"file content"}}
-	assert.Equal(t, expectedFiles, result.Files)
+	require.Equal(t, expectedFiles, result.Files)
 
 }
 
@@ -252,10 +252,10 @@ func Test_Delete(t *testing.T) {
 	testUrl := fmt.Sprintf("%s/delete?id=1", testServer.URL)
 
 	req, err := http.NewRequest("DELETE", testUrl, nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	resp, err := httpClient.Do(req)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	defer resp.Body.Close()
 
@@ -265,7 +265,7 @@ func Test_Delete(t *testing.T) {
 
 	expectedArgs := url.Values{"id": []string{"1"}}
 
-	assert.Equal(t, expectedArgs, result.Args)
+	require.Equal(t, expectedArgs, result.Args)
 }
 
 func Test_Anything(t *testing.T) {
@@ -282,10 +282,10 @@ func Test_Anything(t *testing.T) {
 	testUrl := fmt.Sprintf("%s/anything?k=v", testServer.URL)
 
 	req, err := http.NewRequest("GET", testUrl, nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	resp, err := httpClient.Do(req)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	defer resp.Body.Close()
 
@@ -293,7 +293,7 @@ func Test_Anything(t *testing.T) {
 	result := new(bulbResponse)
 	json.Unmarshal(body, result)
 
-	assert.Equal(t, testUrl, result.URL)
+	require.Equal(t, testUrl, result.URL)
 }
 
 func Test_AnythingAnything(t *testing.T) {
@@ -309,15 +309,15 @@ func Test_AnythingAnything(t *testing.T) {
 	testUrl := fmt.Sprintf("%s/anything/something?k=v", testServer.URL)
 
 	req, err := http.NewRequest("GET", testUrl, nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	resp, err := httpClient.Do(req)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
 	result := new(bulbResponse)
 	json.Unmarshal(body, result)
-	assert.Equal(t, testUrl, result.URL)
+	require.Equal(t, testUrl, result.URL)
 }
