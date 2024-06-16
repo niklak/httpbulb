@@ -48,6 +48,7 @@ func (s *StatusCodeSuite) TestNotACode() {
 func (s *StatusCodeSuite) TestStatusCodes() {
 
 	type testArgs struct {
+		name           string
 		method         string
 		encodePath     bool
 		statusCodes    []int
@@ -55,42 +56,45 @@ func (s *StatusCodeSuite) TestStatusCodes() {
 	}
 
 	tests := []testArgs{
-		{method: "GET", statusCodes: []int{100}, wantStatusCode: 400},
-		{method: "GET", statusCodes: []int{200, 403, 500}, encodePath: true},
-		{method: "DELETE", statusCodes: []int{200, 403, 500}},
-		{method: "PATCH", statusCodes: []int{200, 403, 500}},
-		{method: "POST", statusCodes: []int{200, 403, 500}},
-		{method: "PUT", statusCodes: []int{200, 403, 500}},
-		{method: "GET", statusCodes: []int{444}},
-		{method: "GET", statusCodes: []int{600}, wantStatusCode: 400},
-		{method: "Get", statusCodes: []int{200, 403, 500}, wantStatusCode: 405},
+		{name: "GET with bad status code 100", method: "GET", statusCodes: []int{100}, wantStatusCode: 400},
+		{name: "GET with encoded status code", method: "GET", statusCodes: []int{200, 403, 500}, encodePath: true},
+		{name: "DELETE", method: "DELETE", statusCodes: []int{200, 403, 500}},
+		{name: "PATCH", method: "PATCH", statusCodes: []int{200, 403, 500}},
+		{name: "POST", method: "POST", statusCodes: []int{200, 403, 500}},
+		{name: "PUT", method: "PUT", statusCodes: []int{200, 403, 500}},
+		{name: "GET custom status code", method: "GET", statusCodes: []int{444}},
+		{name: "GET with bad status code 600", method: "GET", statusCodes: []int{600}, wantStatusCode: 400},
+		{name: "Bad method name", method: "Get", statusCodes: []int{200, 403, 500}, wantStatusCode: 405},
 	}
 	for _, tt := range tests {
-		var codes []string
 
-		for _, code := range tt.statusCodes {
-			codes = append(codes, strconv.Itoa(code))
-		}
-		codesPath := strings.Join(codes, ",")
+		s.T().Run(tt.name, func(t *testing.T) {
+			var codes []string
 
-		if tt.encodePath {
-			codesPath = url.QueryEscape(codesPath)
-		}
+			for _, code := range tt.statusCodes {
+				codes = append(codes, strconv.Itoa(code))
+			}
+			codesPath := strings.Join(codes, ",")
 
-		testURL := fmt.Sprintf("%s/status/%s", s.testServer.URL, codesPath)
+			if tt.encodePath {
+				codesPath = url.QueryEscape(codesPath)
+			}
 
-		req, err := http.NewRequest(tt.method, testURL, nil)
-		s.Require().NoError(err)
-		resp, err := s.client.Do(req)
-		s.Require().NoError(err)
-		io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
+			testURL := fmt.Sprintf("%s/status/%s", s.testServer.URL, codesPath)
 
-		if tt.wantStatusCode != 0 {
-			s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
-			return
-		}
-		require.Contains(s.T(), tt.statusCodes, resp.StatusCode)
+			req, err := http.NewRequest(tt.method, testURL, nil)
+			require.NoError(t, err)
+			resp, err := s.client.Do(req)
+			require.NoError(t, err)
+			io.Copy(io.Discard, resp.Body)
+			resp.Body.Close()
+
+			if tt.wantStatusCode != 0 {
+				require.Equal(t, tt.wantStatusCode, resp.StatusCode)
+				return
+			}
+			require.Contains(t, tt.statusCodes, resp.StatusCode)
+		})
 
 	}
 

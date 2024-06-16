@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/andybalholm/brotli"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -158,6 +159,7 @@ func (s *ResponseFormatSuite) TestDeny() {
 
 func (s *ResponseFormatSuite) TestSamples() {
 	type testArgs struct {
+		name             string
 		apiPath          string
 		wantContentType  string
 		wantStatusCode   int
@@ -166,24 +168,28 @@ func (s *ResponseFormatSuite) TestSamples() {
 
 	tests := []testArgs{
 		{
+			name:             "encoding/utf8",
 			apiPath:          "/encoding/utf8",
 			wantContentType:  "text/html; charset=utf-8",
 			wantStatusCode:   http.StatusOK,
 			wantBodyFragment: `ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ`,
 		},
 		{
+			name:             "html",
 			apiPath:          "/html",
 			wantContentType:  "text/html; charset=utf-8",
 			wantStatusCode:   http.StatusOK,
 			wantBodyFragment: `<h1>Herman Melville - Moby-Dick</h1>`,
 		},
 		{
+			name:             "json",
 			apiPath:          "/json",
 			wantContentType:  "application/json",
 			wantStatusCode:   http.StatusOK,
 			wantBodyFragment: `"title": "Sample Slide Show"`,
 		},
 		{
+			name:             "xml",
 			apiPath:          "/xml",
 			wantContentType:  "application/xml",
 			wantStatusCode:   http.StatusOK,
@@ -192,21 +198,23 @@ func (s *ResponseFormatSuite) TestSamples() {
 	}
 
 	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest("GET", s.testServer.URL+tt.apiPath, nil)
+			require.NoError(t, err)
 
-		req, err := http.NewRequest("GET", s.testServer.URL+tt.apiPath, nil)
-		s.Require().NoError(err)
+			resp, err := s.client.Do(req)
+			require.NoError(t, err)
+			defer resp.Body.Close()
 
-		resp, err := s.client.Do(req)
-		s.Require().NoError(err)
-		defer resp.Body.Close()
+			require.Equal(t, tt.wantStatusCode, resp.StatusCode)
+			require.Equal(t, tt.wantContentType, resp.Header.Get("Content-Type"))
 
-		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
-		s.Require().Equal(tt.wantContentType, resp.Header.Get("Content-Type"))
+			body, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
 
-		body, err := io.ReadAll(resp.Body)
-		s.Require().NoError(err)
+			require.Contains(t, string(body), tt.wantBodyFragment)
+		})
 
-		s.Require().Contains(string(body), tt.wantBodyFragment)
 	}
 }
 

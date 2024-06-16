@@ -47,37 +47,52 @@ func (s *RedirectSuite) TearDownSuite() {
 }
 
 func (s *RedirectSuite) TestRedirectTo() {
-	var methods = []string{"GET", "DELETE", "POST", "PUT", "PATCH"}
-	for _, method := range methods {
+
+	type testArgs struct {
+		name           string
+		method         string
+		wantStatusCode int
+	}
+
+	tests := []testArgs{
+		{name: "GET", method: http.MethodGet, wantStatusCode: http.StatusMovedPermanently},
+		{name: "DELETE", method: http.MethodDelete, wantStatusCode: http.StatusMovedPermanently},
+		{name: "POST", method: http.MethodPost, wantStatusCode: http.StatusTemporaryRedirect},
+		{name: "PUT", method: http.MethodPut, wantStatusCode: http.StatusTemporaryRedirect},
+		{name: "PATCH", method: http.MethodPatch, wantStatusCode: http.StatusTemporaryRedirect},
+	}
+
+	for _, tt := range tests {
+
 		headers := http.Header{}
-		s.T().Run(method, func(t *testing.T) {
-			dstURL := s.testServer.URL + "/" + strings.ToLower(method)
+		s.T().Run(tt.name, func(t *testing.T) {
+			dstURL := s.testServer.URL + "/" + strings.ToLower(tt.method)
 
 			apiURL, err := url.Parse(s.testServer.URL)
 			require.NoError(t, err)
 			apiURL.Path = "/redirect-to"
 			var body io.Reader
-			switch method {
+			switch tt.method {
 			case http.MethodGet, http.MethodDelete:
 				query := url.Values{}
 				query.Set("url", dstURL)
-				query.Set("status", strconv.Itoa(http.StatusMovedPermanently))
+				query.Set("status", strconv.Itoa(tt.wantStatusCode))
 				apiURL.RawQuery = query.Encode()
 			case http.MethodPost, http.MethodPut, http.MethodPatch:
 				form := url.Values{}
 				form.Set("url", dstURL)
-				form.Set("status", strconv.Itoa(http.StatusMovedPermanently))
+				form.Set("status", strconv.Itoa(tt.wantStatusCode))
 				body = strings.NewReader(form.Encode())
 				headers.Set("Content-Type", "application/x-www-form-urlencoded")
 			}
-			req, err := http.NewRequest(method, apiURL.String(), body)
+			req, err := http.NewRequest(tt.method, apiURL.String(), body)
 			require.NoError(t, err)
 			req.Header = headers
 			resp, err := s.clientNoRedirect.Do(req)
 			require.NoError(t, err)
 			io.Copy(io.Discard, resp.Body)
 			resp.Body.Close()
-			require.Equal(t, http.StatusMovedPermanently, resp.StatusCode)
+			require.Equal(t, tt.wantStatusCode, resp.StatusCode)
 			require.Equal(t, dstURL, resp.Header.Get("Location"))
 		})
 	}
@@ -87,6 +102,7 @@ func (s *RedirectSuite) TestRedirectTo() {
 func (s *RedirectSuite) TestRedirects() {
 
 	type testArgs struct {
+		name           string
 		apiURL         string
 		wantLocation   string
 		wantStatusCode int
@@ -94,39 +110,47 @@ func (s *RedirectSuite) TestRedirects() {
 
 	tests := []testArgs{
 		{
+			name:           "redirect to relative",
 			apiURL:         fmt.Sprintf("%s/redirect/3", s.testServer.URL),
 			wantLocation:   "/relative-redirect/2",
 			wantStatusCode: http.StatusFound,
 		},
 		{
+			name:           "bad redirect",
 			apiURL:         fmt.Sprintf("%s/redirect/0", s.testServer.URL),
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
+			name:           "not found",
 			apiURL:         fmt.Sprintf("%s/redirect/a", s.testServer.URL),
 			wantStatusCode: http.StatusNotFound,
 		},
 		{
+			name:           "redirect to absolute",
 			apiURL:         fmt.Sprintf("%s/redirect/3?absolute=true", s.testServer.URL),
 			wantLocation:   fmt.Sprintf("%s/absolute-redirect/2", s.testServer.URL),
 			wantStatusCode: http.StatusFound,
 		},
 		{
+			name:           "relative redirect",
 			apiURL:         fmt.Sprintf("%s/relative-redirect/3", s.testServer.URL),
 			wantLocation:   "/relative-redirect/2",
 			wantStatusCode: http.StatusFound,
 		},
 		{
+			name:           "successful relative redirect",
 			apiURL:         fmt.Sprintf("%s/relative-redirect/1", s.testServer.URL),
 			wantLocation:   "/get",
 			wantStatusCode: http.StatusFound,
 		},
 		{
+			name:           "absolute redirect",
 			apiURL:         fmt.Sprintf("%s/absolute-redirect/3", s.testServer.URL),
 			wantLocation:   fmt.Sprintf("%s/absolute-redirect/2", s.testServer.URL),
 			wantStatusCode: http.StatusFound,
 		},
 		{
+			name:           "successful absolute redirect",
 			apiURL:         fmt.Sprintf("%s/absolute-redirect/1", s.testServer.URL),
 			wantLocation:   fmt.Sprintf("%s/get", s.testServer.URL),
 			wantStatusCode: http.StatusFound,
@@ -134,37 +158,21 @@ func (s *RedirectSuite) TestRedirects() {
 	}
 
 	for _, tt := range tests {
-		req, err := http.NewRequest(http.MethodGet, tt.apiURL, nil)
-		s.Require().NoError(err)
-		resp, err := s.clientOneRedirect.Do(req)
-		s.Require().NoError(err)
-		io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
-		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
-		// as this test follows only for one redirect, the location should be: /relative-redirect/2
-		s.Require().Equal(tt.wantLocation, resp.Header.Get("Location"))
+		s.T().Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, tt.apiURL, nil)
+			require.NoError(t, err)
+			resp, err := s.clientOneRedirect.Do(req)
+			require.NoError(t, err)
+			io.Copy(io.Discard, resp.Body)
+			resp.Body.Close()
+			require.Equal(t, tt.wantStatusCode, resp.StatusCode)
+			// as this test follows only for one redirect, the location should be: /relative-redirect/n-1
+			require.Equal(t, tt.wantLocation, resp.Header.Get("Location"))
+		})
+
 	}
 }
 
 func TestRedirectSuite(t *testing.T) {
 	suite.Run(t, new(RedirectSuite))
-}
-
-func Test_redirectHandle(t *testing.T) {
-	type args struct {
-		w        http.ResponseWriter
-		r        *http.Request
-		absolute bool
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			redirectHandle(tt.args.w, tt.args.r, tt.args.absolute)
-		})
-	}
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -69,6 +70,7 @@ func (s *ResponseInspectionSuite) TestResponseHeaders() {
 func (s *ResponseInspectionSuite) TestCache() {
 
 	type testArgs struct {
+		name            string
 		ifModifiedSince string
 		ifNoneMatch     string
 		wantStatusCode  int
@@ -76,43 +78,50 @@ func (s *ResponseInspectionSuite) TestCache() {
 
 	tests := []testArgs{
 		{
+			name:           "no cache 200",
 			wantStatusCode: http.StatusOK,
 		},
 		{
+			name:            "If-Modified-Since 304",
 			ifModifiedSince: time.Now().Format(time.RFC1123),
 			wantStatusCode:  http.StatusNotModified,
 		},
 		{
+			name:           "If-None-Match 304",
 			ifNoneMatch:    uuid.New().String(),
 			wantStatusCode: http.StatusNotModified,
 		},
 		{
+			name:            "If-Modified-Since and If-None-Match 304",
 			ifModifiedSince: time.Now().Format(time.RFC1123),
 			ifNoneMatch:     uuid.New().String(),
 			wantStatusCode:  http.StatusNotModified,
 		},
 	}
 	for _, tt := range tests {
-		apiURL := s.testServer.URL + "/cache"
+		s.T().Run(tt.name, func(t *testing.T) {
+			apiURL := s.testServer.URL + "/cache"
 
-		req, err := http.NewRequest("GET", apiURL, nil)
-		s.Require().NoError(err)
+			req, err := http.NewRequest("GET", apiURL, nil)
+			require.NoError(t, err)
 
-		if tt.ifModifiedSince != "" {
-			req.Header.Set("If-Modified-Since", tt.ifModifiedSince)
-		}
-		if tt.ifNoneMatch != "" {
-			req.Header.Set("If-None-Match", tt.ifNoneMatch)
-		}
+			if tt.ifModifiedSince != "" {
+				req.Header.Set("If-Modified-Since", tt.ifModifiedSince)
+			}
+			if tt.ifNoneMatch != "" {
+				req.Header.Set("If-None-Match", tt.ifNoneMatch)
+			}
 
-		resp, err := s.client.Do(req)
-		s.Require().NoError(err)
+			resp, err := s.client.Do(req)
+			require.NoError(t, err)
 
-		io.Copy(io.Discard, resp.Body)
+			io.Copy(io.Discard, resp.Body)
 
-		resp.Body.Close()
+			resp.Body.Close()
 
-		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
+			require.Equal(t, tt.wantStatusCode, resp.StatusCode)
+		})
+
 	}
 
 }
@@ -155,6 +164,7 @@ func (s *ResponseInspectionSuite) TestCacheControl() {
 func (s *ResponseInspectionSuite) TestEtag() {
 
 	type testArgs struct {
+		name        string
 		ifNoneMatch string
 		ifMatch     string
 		wantStatus  int
@@ -163,56 +173,65 @@ func (s *ResponseInspectionSuite) TestEtag() {
 
 	tests := []testArgs{
 		{
+			name:       "200",
 			wantStatus: http.StatusOK,
 		},
 		{
+			name:        "If-None-Match valid etag",
 			ifNoneMatch: etag,
 			wantStatus:  http.StatusNotModified,
 		},
 		{
+			name:        "If-None-Match *",
 			ifNoneMatch: "*",
 			wantStatus:  http.StatusNotModified,
 		},
 		{
+			name:        "If-None-Match invalid etag",
 			ifNoneMatch: uuid.NewString(),
 			wantStatus:  http.StatusOK,
 		},
 		{
+			name:       "If-Match valid etag",
 			ifMatch:    etag,
 			wantStatus: http.StatusOK,
 		},
 		{
+			name:       "If-Match * 200",
 			ifMatch:    "*",
 			wantStatus: http.StatusOK,
 		},
 		{
+			name:       "If-Match invalid etag",
 			ifMatch:    uuid.NewString(),
 			wantStatus: http.StatusPreconditionFailed,
 		},
 	}
 	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			apiURL := s.testServer.URL + "/etag/" + etag
 
-		apiURL := s.testServer.URL + "/etag/" + etag
+			req, err := http.NewRequest("GET", apiURL, nil)
+			require.NoError(t, err)
 
-		req, err := http.NewRequest("GET", apiURL, nil)
-		s.Require().NoError(err)
+			if tt.ifNoneMatch != "" {
+				req.Header.Set("If-None-Match", tt.ifNoneMatch)
+			}
+			if tt.ifMatch != "" {
+				req.Header.Set("If-Match", tt.ifMatch)
+			}
 
-		if tt.ifNoneMatch != "" {
-			req.Header.Set("If-None-Match", tt.ifNoneMatch)
-		}
-		if tt.ifMatch != "" {
-			req.Header.Set("If-Match", tt.ifMatch)
-		}
+			resp, err := s.client.Do(req)
+			require.NoError(t, err)
 
-		resp, err := s.client.Do(req)
-		s.Require().NoError(err)
+			io.Copy(io.Discard, resp.Body)
+			require.NoError(t, err)
 
-		io.Copy(io.Discard, resp.Body)
-		s.Require().NoError(err)
+			resp.Body.Close()
 
-		resp.Body.Close()
+			require.Equal(t, tt.wantStatus, resp.StatusCode)
+		})
 
-		s.Require().Equal(tt.wantStatus, resp.StatusCode)
 	}
 
 }

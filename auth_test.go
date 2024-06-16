@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -32,6 +33,8 @@ func (s *AuthSuite) TearDownSuite() {
 func (s *AuthSuite) TestBasicAuth() {
 
 	type testArgs struct {
+		name           string
+		apiPath        string
 		username       string
 		password       string
 		authUsername   string
@@ -47,6 +50,8 @@ func (s *AuthSuite) TestBasicAuth() {
 
 	tests := []testArgs{
 		{
+			name:           "valid basic auth",
+			apiPath:        "basic-auth",
 			username:       "user1234",
 			password:       "password1234",
 			authUsername:   "user1234",
@@ -55,63 +60,55 @@ func (s *AuthSuite) TestBasicAuth() {
 			wantStatusCode: http.StatusOK,
 		},
 		{
+			name:           "invalid basic auth",
+			apiPath:        "basic-auth",
 			username:       "user1234",
 			password:       "password1234",
 			authUsername:   "user1234",
 			authPassword:   "password4321",
 			wantStatusCode: http.StatusUnauthorized,
 		},
+		{
+			name:           "invalid hidden basic auth",
+			apiPath:        "hidden-basic-auth",
+			username:       "user1234",
+			password:       "password1234",
+			authUsername:   "user1234",
+			authPassword:   "password4321",
+			wantStatusCode: http.StatusNotFound,
+		},
 	}
 
 	for _, tt := range tests {
-		apiURL := fmt.Sprintf("%s/basic-auth/%s/%s", s.testServer.URL, tt.username, tt.password)
-		req, err := http.NewRequest("GET", apiURL, nil)
-		s.Require().NoError(err)
-		req.SetBasicAuth(tt.authUsername, tt.authPassword)
 
-		resp, err := s.client.Do(req)
-		s.Require().NoError(err)
-		body, err := io.ReadAll(resp.Body)
-		s.Require().NoError(err)
-		resp.Body.Close()
+		s.T().Run(tt.name, func(t *testing.T) {
+			apiURL := fmt.Sprintf("%s/%s/%s/%s", s.testServer.URL, tt.apiPath, tt.username, tt.password)
+			req, err := http.NewRequest("GET", apiURL, nil)
+			require.NoError(t, err)
+			req.SetBasicAuth(tt.authUsername, tt.authPassword)
 
-		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
+			resp, err := s.client.Do(req)
+			require.NoError(t, err)
+			body, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
+			resp.Body.Close()
 
-		result := &serverResponse{}
-		err = json.Unmarshal(body, result)
-		s.Require().NoError(err)
+			require.Equal(t, tt.wantStatusCode, resp.StatusCode)
 
-		s.Require().Equal(tt.wantAuth, result.Authenticated)
+			result := &serverResponse{}
+			err = json.Unmarshal(body, result)
+			require.NoError(t, err)
+			require.Equal(t, tt.wantAuth, result.Authenticated)
+		})
 
 	}
-
-}
-
-func (s *AuthSuite) TestHiddenBasicAuthErr() {
-
-	user := "user1234"
-	passwd := "password1234"
-
-	addr := fmt.Sprintf("%s/hidden-basic-auth/%s/%s", s.testServer.URL, user, passwd)
-	req, err := http.NewRequest("GET", addr, nil)
-	s.Require().NoError(err)
-
-	req.SetBasicAuth(user, "wrong-password")
-
-	resp, err := s.client.Do(req)
-	s.Require().NoError(err)
-
-	defer resp.Body.Close()
-
-	io.Copy(io.Discard, resp.Body)
-
-	s.Require().Equal(http.StatusNotFound, resp.StatusCode)
 
 }
 
 func (s *AuthSuite) TestBearerAuth() {
 
 	type testArgs struct {
+		name           string
 		authPrefix     string
 		token          string
 		wantAuth       bool
@@ -124,30 +121,33 @@ func (s *AuthSuite) TestBearerAuth() {
 	}
 
 	tests := []testArgs{
-		{authPrefix: "Bearer ", token: "1234567890", wantAuth: true, wantStatusCode: http.StatusOK},
-		{authPrefix: "Token ", token: "1234567890", wantAuth: false, wantStatusCode: http.StatusUnauthorized},
+		{name: "valid bearer", authPrefix: "Bearer ", token: "1234567890", wantAuth: true, wantStatusCode: http.StatusOK},
+		{name: "invalid bearer", authPrefix: "Token ", token: "1234567890", wantAuth: false, wantStatusCode: http.StatusUnauthorized},
 	}
 
 	for _, tt := range tests {
-		addr := fmt.Sprintf("%s/bearer", s.testServer.URL)
-		req, err := http.NewRequest("GET", addr, nil)
-		s.Require().NoError(err)
+		s.T().Run(tt.name, func(t *testing.T) {
+			addr := fmt.Sprintf("%s/bearer", s.testServer.URL)
+			req, err := http.NewRequest("GET", addr, nil)
+			require.NoError(t, err)
 
-		req.Header.Set("Authorization", tt.authPrefix+tt.token)
+			req.Header.Set("Authorization", tt.authPrefix+tt.token)
 
-		resp, err := s.client.Do(req)
-		s.Require().NoError(err)
-		body, err := io.ReadAll(resp.Body)
-		s.Require().NoError(err)
-		resp.Body.Close()
+			resp, err := s.client.Do(req)
+			require.NoError(t, err)
+			body, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
+			resp.Body.Close()
 
-		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
+			require.Equal(t, tt.wantStatusCode, resp.StatusCode)
 
-		result := &serverResponse{}
-		err = json.Unmarshal(body, result)
-		s.Require().NoError(err)
+			result := &serverResponse{}
+			err = json.Unmarshal(body, result)
+			require.NoError(t, err)
 
-		s.Require().Equal(tt.wantAuth, result.Authenticated)
+			require.Equal(t, tt.wantAuth, result.Authenticated)
+		})
+
 	}
 
 }

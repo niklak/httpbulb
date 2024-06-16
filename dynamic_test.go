@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -116,30 +117,48 @@ func (s *DynamicSuite) TestBase64Decode() {
 
 func (s *DynamicSuite) TestRandomBytes() {
 
-	bytesSizes := []int{0, 10, 512}
+	type testArgs struct {
+		name     string
+		byteSize int
+	}
 
-	for _, numBytes := range bytesSizes {
-		apiURL := fmt.Sprintf("%s/bytes/%d", s.testServer.URL, numBytes)
+	tests := []testArgs{
+		{"bytes 0", 0},
+		{"bytes 10", 10},
+		{"bytes 512", 512},
+	}
 
-		req, err := http.NewRequest("GET", apiURL, nil)
-		s.Require().NoError(err)
+	for _, tt := range tests {
 
-		resp, err := s.client.Do(req)
-		s.Require().NoError(err)
+		s.T().Run(tt.name, func(t *testing.T) {
 
-		s.Require().Equal(http.StatusOK, resp.StatusCode)
+			apiURL := fmt.Sprintf("%s/bytes/%d", s.testServer.URL, tt.byteSize)
 
-		defer resp.Body.Close()
+			req, err := http.NewRequest("GET", apiURL, nil)
+			require.NoError(t, err)
 
-		body, err := io.ReadAll(resp.Body)
-		s.Require().NoError(err)
+			resp, err := s.client.Do(req)
+			require.NoError(t, err)
 
-		s.Require().Equal(numBytes, len(body))
+			require.Equal(t, http.StatusOK, resp.StatusCode)
+			defer resp.Body.Close()
+
+			body, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
+
+			require.Equal(t, tt.byteSize, len(body))
+		})
+
 	}
 
 }
 
 func (s *DynamicSuite) TestStreamRandomBytes() {
+
+	type testArgs struct {
+		name      string
+		chunkSize int
+	}
 
 	numBytes := 1024
 
@@ -148,29 +167,39 @@ func (s *DynamicSuite) TestStreamRandomBytes() {
 	// 24 bytes as chunk, the last chunk will be lesser then others
 	// 512 bytes -- nothing special
 	// 2028 bytes -- this chunk size bigger then the total bytes, so the body response will be sent in one chunk
-	chunkSizes := []int{0, 24, 512, 2028}
 
-	for _, chunkSize := range chunkSizes {
-		apiURL := fmt.Sprintf("%s/stream-bytes/%d?chunk_size=%d", s.testServer.URL, numBytes, chunkSize)
+	tests := []testArgs{
+		{"chunk size 0", 0},
+		{"chunk size 24", 24},
+		{"chunk size 512", 512},
+		{"chunk size 2028", 2028},
+	}
 
-		req, err := http.NewRequest("GET", apiURL, nil)
-		s.Require().NoError(err)
+	for _, tt := range tests {
 
-		resp, err := s.client.Do(req)
-		s.Require().NoError(err)
+		s.T().Run(tt.name, func(t *testing.T) {
+			apiURL := fmt.Sprintf("%s/stream-bytes/%d?chunk_size=%d", s.testServer.URL, numBytes, tt.chunkSize)
 
-		s.Require().Equal(http.StatusOK, resp.StatusCode)
+			req, err := http.NewRequest("GET", apiURL, nil)
+			s.Require().NoError(err)
 
-		defer resp.Body.Close()
+			resp, err := s.client.Do(req)
+			s.Require().NoError(err)
 
-		s.Require().NoError(err)
+			s.Require().Equal(http.StatusOK, resp.StatusCode)
 
-		body, err := io.ReadAll(resp.Body)
+			defer resp.Body.Close()
 
-		s.Require().NoError(err)
-		receivedBytes := len(body)
+			s.Require().NoError(err)
 
-		s.Require().Equal(numBytes, receivedBytes)
+			body, err := io.ReadAll(resp.Body)
+
+			s.Require().NoError(err)
+			receivedBytes := len(body)
+
+			s.Require().Equal(numBytes, receivedBytes)
+		})
+
 	}
 }
 

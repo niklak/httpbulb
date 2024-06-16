@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -37,6 +38,7 @@ func (s *AuthDigestSuite) TestDigestAuth() {
 	}
 
 	type testArgs struct {
+		name           string
 		algorithm      string
 		qop            string
 		wantAuth       bool
@@ -45,70 +47,76 @@ func (s *AuthDigestSuite) TestDigestAuth() {
 	}
 
 	tests := []testArgs{
-		{algorithm: "MD5", qop: "auth", wantAuth: true, wantStatusCode: http.StatusOK},
-		{algorithm: "MD5", qop: "auth", wantAuth: false, wantStatusCode: http.StatusUnauthorized, staleAfter: "0"},
-		{algorithm: "SHA-256", qop: "auth", wantAuth: true, wantStatusCode: http.StatusOK},
-		{algorithm: "SHA-512", qop: "auth", wantAuth: true, wantStatusCode: http.StatusOK},
+		{name: "valid MD5 digest",
+			algorithm: "MD5", qop: "auth", wantAuth: true, wantStatusCode: http.StatusOK},
+		{name: "staled MD5 digest",
+			algorithm: "MD5", qop: "auth", wantAuth: false, wantStatusCode: http.StatusUnauthorized, staleAfter: "0"},
+		{name: "valid SHA-256 digest",
+			algorithm: "SHA-256", qop: "auth", wantAuth: true, wantStatusCode: http.StatusOK},
+		{name: "valid SHA-512 digest",
+			algorithm: "SHA-512", qop: "auth", wantAuth: true, wantStatusCode: http.StatusOK},
 	}
 
 	username := "mememe"
 	password := "mymymy"
 
 	for _, tt := range tests {
-		addr := fmt.Sprintf(
-			"%s/digest-auth/%s/%s/%s/%s",
-			s.testServer.URL, tt.qop, username, password, tt.algorithm)
-		credentials := map[string]string{
-			"username":  username,
-			"realm":     "httpbulb",
-			"qop":       tt.qop,
-			"uri":       addr,
-			"nonce":     "dcd98b7102dd2f0e8b11d0f600bfb0c093",
-			"nc":        "00000001",
-			"cnonce":    "0a4f113b",
-			"algorithm": tt.algorithm,
-		}
+		s.T().Run(tt.name, func(t *testing.T) {
+			addr := fmt.Sprintf(
+				"%s/digest-auth/%s/%s/%s/%s",
+				s.testServer.URL, tt.qop, username, password, tt.algorithm)
+			credentials := map[string]string{
+				"username":  username,
+				"realm":     "httpbulb",
+				"qop":       tt.qop,
+				"uri":       addr,
+				"nonce":     "dcd98b7102dd2f0e8b11d0f600bfb0c093",
+				"nc":        "00000001",
+				"cnonce":    "0a4f113b",
+				"algorithm": tt.algorithm,
+			}
 
-		digestResp := compileDigestResponse(credentials, password, http.MethodGet, addr)
+			digestResp := compileDigestResponse(credentials, password, http.MethodGet, addr)
 
-		credentials["response"] = digestResp
+			credentials["response"] = digestResp
 
-		credentialList := make([]string, 0, len(credentials)+1)
-		for k, v := range credentials {
-			credentialList = append(credentialList, fmt.Sprintf(`%s="%s"`, k, v))
-		}
+			credentialList := make([]string, 0, len(credentials)+1)
+			for k, v := range credentials {
+				credentialList = append(credentialList, fmt.Sprintf(`%s="%s"`, k, v))
+			}
 
-		auth := strings.Join(credentialList, ", ")
+			auth := strings.Join(credentialList, ", ")
 
-		req, err := http.NewRequest("GET", addr, nil)
-		s.Require().NoError(err)
+			req, err := http.NewRequest("GET", addr, nil)
+			require.NoError(t, err)
+			req.Header.Add("Authorization", fmt.Sprintf(`Digest %s`, auth))
 
-		req.Header.Add("Authorization", fmt.Sprintf(`Digest %s`, auth))
+			if tt.staleAfter != "" {
+				req.AddCookie(&http.Cookie{
+					Name:  "stale_after",
+					Value: tt.staleAfter,
+					Path:  "/",
+				})
+			}
 
-		if tt.staleAfter != "" {
-			req.AddCookie(&http.Cookie{
-				Name:  "stale_after",
-				Value: tt.staleAfter,
-				Path:  "/",
-			})
-		}
+			resp, err := s.client.Do(req)
+			require.NoError(t, err)
 
-		resp, err := s.client.Do(req)
-		s.Require().NoError(err)
+			body, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
+			resp.Body.Close()
 
-		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
+			require.Equal(t, tt.wantStatusCode, resp.StatusCode)
 
-		body, err := io.ReadAll(resp.Body)
-		s.Require().NoError(err)
-		resp.Body.Close()
+			result := &serverResponse{}
 
-		result := &serverResponse{}
+			if len(body) > 0 {
+				err = json.Unmarshal(body, result)
+				require.NoError(t, err)
+			}
+			require.Equal(t, tt.wantAuth, result.Authenticated)
+		})
 
-		if len(body) > 0 {
-			err = json.Unmarshal(body, result)
-			s.Require().NoError(err)
-		}
-		s.Require().Equal(tt.wantAuth, result.Authenticated)
 	}
 
 }
