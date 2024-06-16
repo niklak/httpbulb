@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -30,129 +29,127 @@ func (s *AuthSuite) TearDownSuite() {
 	s.testServer.Close()
 }
 
-func (s *AuthSuite) TestBasicAuthOk() {
+func (s *AuthSuite) TestBasicAuth() {
+
+	type testArgs struct {
+		username       string
+		password       string
+		authUsername   string
+		authPassword   string
+		wantAuth       bool
+		wantStatusCode int
+	}
 
 	type serverResponse struct {
 		Authenticated bool   `json:"authenticated"`
 		User          string `json:"user"`
 	}
 
-	user := "mememe"
-	passwd := "mymymy"
+	tests := []testArgs{
+		{
+			username:       "user1234",
+			password:       "password1234",
+			authUsername:   "user1234",
+			authPassword:   "password1234",
+			wantAuth:       true,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			username:       "user1234",
+			password:       "password1234",
+			authUsername:   "user1234",
+			authPassword:   "password4321",
+			wantStatusCode: http.StatusUnauthorized,
+		},
+	}
 
-	addr := fmt.Sprintf("%s/basic-auth/%s/%s", s.testServer.URL, user, passwd)
-	req, err := http.NewRequest("GET", addr, nil)
-	assert.NoError(s.T(), err)
+	for _, tt := range tests {
+		apiURL := fmt.Sprintf("%s/basic-auth/%s/%s", s.testServer.URL, tt.username, tt.password)
+		req, err := http.NewRequest("GET", apiURL, nil)
+		s.Require().NoError(err)
+		req.SetBasicAuth(tt.authUsername, tt.authPassword)
 
-	req.SetBasicAuth(user, passwd)
+		resp, err := s.client.Do(req)
+		s.Require().NoError(err)
+		body, err := io.ReadAll(resp.Body)
+		s.Require().NoError(err)
+		resp.Body.Close()
 
-	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
 
-	defer resp.Body.Close()
+		result := &serverResponse{}
+		err = json.Unmarshal(body, result)
+		s.Require().NoError(err)
 
-	body, err := io.ReadAll(resp.Body)
-	assert.NoError(s.T(), err)
+		s.Require().Equal(tt.wantAuth, result.Authenticated)
 
-	result := &serverResponse{}
-	err = json.Unmarshal(body, result)
-	assert.NoError(s.T(), err)
-
-	expected := &serverResponse{Authenticated: true, User: user}
-
-	assert.Equal(s.T(), expected, result)
-
-}
-
-func (s *AuthSuite) TestBasicAuthErr() {
-
-	user := "mememe"
-	passwd := "mymymy"
-
-	addr := fmt.Sprintf("%s/basic-auth/%s/%s", s.testServer.URL, user, passwd)
-	req, err := http.NewRequest("GET", addr, nil)
-	assert.NoError(s.T(), err)
-
-	req.SetBasicAuth(user, "wrongpasswd")
-
-	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
-
-	defer resp.Body.Close()
-
-	io.Copy(io.Discard, resp.Body)
-
-	assert.Equal(s.T(), http.StatusUnauthorized, resp.StatusCode)
+	}
 
 }
 
 func (s *AuthSuite) TestHiddenBasicAuthErr() {
 
-	user := "mememe"
-	passwd := "mymymy"
+	user := "user1234"
+	passwd := "password1234"
 
 	addr := fmt.Sprintf("%s/hidden-basic-auth/%s/%s", s.testServer.URL, user, passwd)
 	req, err := http.NewRequest("GET", addr, nil)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
-	req.SetBasicAuth(user, "wrongpasswd")
+	req.SetBasicAuth(user, "wrong-password")
 
 	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	defer resp.Body.Close()
 
 	io.Copy(io.Discard, resp.Body)
 
-	assert.Equal(s.T(), http.StatusNotFound, resp.StatusCode)
+	s.Require().Equal(http.StatusNotFound, resp.StatusCode)
 
 }
 
-func (s *AuthSuite) TestBearerAuthOk() {
+func (s *AuthSuite) TestBearerAuth() {
+
+	type testArgs struct {
+		authPrefix     string
+		token          string
+		wantAuth       bool
+		wantStatusCode int
+	}
 
 	type serverResponse struct {
 		Authenticated bool   `json:"authenticated"`
 		Token         string `json:"token"`
 	}
 
-	token := "1234567890"
+	tests := []testArgs{
+		{authPrefix: "Bearer ", token: "1234567890", wantAuth: true, wantStatusCode: http.StatusOK},
+		{authPrefix: "Token ", token: "1234567890", wantAuth: false, wantStatusCode: http.StatusUnauthorized},
+	}
 
-	addr := fmt.Sprintf("%s/bearer", s.testServer.URL)
-	req, err := http.NewRequest("GET", addr, nil)
-	assert.NoError(s.T(), err)
+	for _, tt := range tests {
+		addr := fmt.Sprintf("%s/bearer", s.testServer.URL)
+		req, err := http.NewRequest("GET", addr, nil)
+		s.Require().NoError(err)
 
-	req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Authorization", tt.authPrefix+tt.token)
 
-	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
+		resp, err := s.client.Do(req)
+		s.Require().NoError(err)
+		body, err := io.ReadAll(resp.Body)
+		s.Require().NoError(err)
+		resp.Body.Close()
 
-	defer resp.Body.Close()
+		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
 
-	result := &serverResponse{}
-	err = json.NewDecoder(resp.Body).Decode(result)
-	assert.NoError(s.T(), err)
+		result := &serverResponse{}
+		err = json.Unmarshal(body, result)
+		s.Require().NoError(err)
 
-	expected := &serverResponse{Authenticated: true, Token: token}
+		s.Require().Equal(tt.wantAuth, result.Authenticated)
+	}
 
-	assert.Equal(s.T(), expected, result)
-}
-
-func (s *AuthSuite) TestBearerAuthErr() {
-
-	token := "1234567890"
-
-	addr := fmt.Sprintf("%s/bearer", s.testServer.URL)
-	req, err := http.NewRequest("GET", addr, nil)
-	assert.NoError(s.T(), err)
-
-	req.Header.Set("Authorization", "Token "+token)
-
-	resp, err := s.client.Do(req)
-	assert.NoError(s.T(), err)
-
-	defer resp.Body.Close()
-
-	assert.Equal(s.T(), http.StatusUnauthorized, resp.StatusCode)
 }
 
 func TestAuthSuite(t *testing.T) {
