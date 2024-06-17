@@ -19,7 +19,6 @@ func NewRouter() *chi.Mux {
 	r.Get("/user-agent", http.HandlerFunc(UserAgentHandle))
 
 	r.Get("/robots.txt", http.HandlerFunc(RobotsHandle))
-
 	r.Get("/gzip", http.HandlerFunc(GzipHandle))
 	r.Get("/deflate", http.HandlerFunc(DeflateHandle))
 	r.Get("/brotli", http.HandlerFunc(BrotliHandle))
