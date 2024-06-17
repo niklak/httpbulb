@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -30,30 +31,34 @@ func (s *ImageSuite) TearDownSuite() {
 func (s *ImageSuite) TestImage() {
 
 	type testArgs struct {
+		name            string
 		apiPath         string
 		wantContentType string
 		wantStatusCode  int
 	}
 
 	tests := []testArgs{
-		{apiPath: "/image/svg", wantContentType: "image/svg+xml", wantStatusCode: http.StatusOK},
-		{apiPath: "/image/png", wantContentType: "image/png", wantStatusCode: http.StatusOK},
-		{apiPath: "/image/jpeg", wantContentType: "image/jpeg", wantStatusCode: http.StatusOK},
-		{apiPath: "/image/webp", wantContentType: "image/webp", wantStatusCode: http.StatusOK},
-		{apiPath: "/image/gif", wantContentType: "text/plain; charset=utf-8", wantStatusCode: http.StatusNotFound},
+		{name: "svg", apiPath: "/image/svg", wantContentType: "image/svg+xml", wantStatusCode: http.StatusOK},
+		{name: "png", apiPath: "/image/png", wantContentType: "image/png", wantStatusCode: http.StatusOK},
+		{name: "jpeg", apiPath: "/image/jpeg", wantContentType: "image/jpeg", wantStatusCode: http.StatusOK},
+		{name: "webp", apiPath: "/image/webp", wantContentType: "image/webp", wantStatusCode: http.StatusOK},
+		{name: "not found", apiPath: "/image/gif", wantContentType: "text/plain; charset=utf-8", wantStatusCode: http.StatusNotFound},
 	}
 	for _, tt := range tests {
-		req, err := http.NewRequest("GET", s.testServer.URL+tt.apiPath, nil)
-		s.Require().NoError(err)
+		s.T().Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest("GET", s.testServer.URL+tt.apiPath, nil)
+			require.NoError(t, err)
 
-		resp, err := s.client.Do(req)
-		s.Require().NoError(err)
+			resp, err := s.client.Do(req)
+			require.NoError(t, err)
 
-		io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
+			io.Copy(io.Discard, resp.Body)
+			resp.Body.Close()
 
-		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
-		s.Require().Equal(tt.wantContentType, resp.Header.Get("Content-Type"))
+			require.Equal(t, tt.wantStatusCode, resp.StatusCode)
+			require.Equal(t, tt.wantContentType, resp.Header.Get("Content-Type"))
+		})
+
 	}
 
 }
@@ -61,32 +66,36 @@ func (s *ImageSuite) TestImage() {
 func (s *ImageSuite) TestImageAccept() {
 
 	type testArgs struct {
+		name            string
 		accept          string
 		wantContentType string
 		wantStatusCode  int
 	}
 
 	tests := []testArgs{
-		{accept: "image/svg+xml", wantContentType: "image/svg+xml", wantStatusCode: http.StatusOK},
-		{accept: "image/png", wantContentType: "image/png", wantStatusCode: http.StatusOK},
-		{accept: "image/jpeg", wantContentType: "image/jpeg", wantStatusCode: http.StatusOK},
-		{accept: "image/webp", wantContentType: "image/webp", wantStatusCode: http.StatusOK},
-		{accept: "image/gif", wantContentType: "application/json", wantStatusCode: http.StatusNotAcceptable},
-		{accept: "image/*", wantContentType: "image/png", wantStatusCode: http.StatusOK},
+		{name: "svg", accept: "image/svg+xml", wantContentType: "image/svg+xml", wantStatusCode: http.StatusOK},
+		{name: "png", accept: "image/png", wantContentType: "image/png", wantStatusCode: http.StatusOK},
+		{name: "jpeg", accept: "image/jpeg", wantContentType: "image/jpeg", wantStatusCode: http.StatusOK},
+		{name: "webp", accept: "image/webp", wantContentType: "image/webp", wantStatusCode: http.StatusOK},
+		{name: "gif", accept: "image/gif", wantContentType: "application/json", wantStatusCode: http.StatusNotAcceptable},
+		{name: "any", accept: "image/*", wantContentType: "image/png", wantStatusCode: http.StatusOK},
 	}
 	for _, tt := range tests {
-		req, err := http.NewRequest("GET", s.testServer.URL+"/image", nil)
-		s.Require().NoError(err)
-		req.Header.Set("Accept", tt.accept)
+		s.T().Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest("GET", s.testServer.URL+"/image", nil)
+			require.NoError(t, err)
+			req.Header.Set("Accept", tt.accept)
 
-		resp, err := s.client.Do(req)
-		s.Require().NoError(err)
+			resp, err := s.client.Do(req)
+			require.NoError(t, err)
 
-		io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
+			io.Copy(io.Discard, resp.Body)
+			resp.Body.Close()
 
-		s.Require().Equal(tt.wantStatusCode, resp.StatusCode)
-		s.Require().Equal(tt.wantContentType, resp.Header.Get("Content-Type"))
+			require.Equal(t, tt.wantStatusCode, resp.StatusCode)
+			require.Equal(t, tt.wantContentType, resp.Header.Get("Content-Type"))
+		})
+
 	}
 
 }
