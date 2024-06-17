@@ -72,4 +72,4 @@ go get -u github.com/niklak/httpbulb
 - `args`, `form`, `files` and `headers` fields are represented by `map[string][]string`.
 - `/status/{code}` endpoint does not handle status codes lesser than 200 or greater than 599.
 - `/cookies-list` -- a new endpoint that returns a cookie list (`[]http.Cookie`) in the same order as it was received and parsed on the go http server.
-- `/images`, `/encoding/utf8`, `/html`, `/json`, `/xml` supports `Range` requests.
+- `/images`, `/encoding/utf8`, `/html`, `/json`, `/xml` endpoints support `Range` requests.

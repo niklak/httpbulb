@@ -14,6 +14,10 @@ const (
 	schemeHttps = "https"
 )
 
+var trueClientIP = "True-Client-IP"
+var xForwardedFor = "X-Forwarded-For"
+var xRealIP = "X-Real-IP"
+
 //go:embed assets/*
 var assetsFS embed.FS
 
@@ -55,7 +59,12 @@ func getAbsoluteURL(r *http.Request) string {
 
 func getIP(r *http.Request) string {
 	var ip string
-	if forwardedFor := r.Header.Get("X-Forwarded-For"); forwardedFor != "" {
+
+	if realIP := r.Header.Get(xRealIP); realIP != "" {
+		ip = realIP
+	} else if clientIP := r.Header.Get(trueClientIP); clientIP != "" {
+		ip = clientIP
+	} else if forwardedFor := r.Header.Get(xForwardedFor); forwardedFor != "" {
 		ip = strings.TrimSpace(strings.SplitN(forwardedFor, ",", 2)[0])
 	} else {
 		ip = r.RemoteAddr
