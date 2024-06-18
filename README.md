@@ -1,4 +1,8 @@
 # httpbulb
+[![Go Reference](https://pkg.go.dev/badge/github.com/niklak/httpbulb.svg)](https://pkg.go.dev/github.com/niklak/httpbulb)
+[![Go](https://github.com/niklak/httpbulb/actions/workflows/go.yml/badge.svg)](https://github.com/niklak/httpbulb/actions/workflows/go.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/niklak/httpbulb)](https://goreportcard.com/report/github.com/niklak/httpbulb)
+
 
 A tool for testing http client capabilities.
 
@@ -20,6 +24,8 @@ go get -u github.com/niklak/httpbulb
 `
 
 ## Examples
+
+The main approach is to use `httpbulb` with `httptest.Server`.
 
 <details>
 
