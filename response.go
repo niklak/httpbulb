@@ -28,6 +28,8 @@ type MethodsResponse struct {
 	Brotli bool `json:"brotli,omitempty"`
 	// Deflated is true if the request was compressed with zlib
 	Deflated bool `json:"deflated,omitempty"`
+	// Proto is the protocol of the request
+	Proto string `json:"proto"`
 }
 
 // StatusResponse is the response for the status endpoint

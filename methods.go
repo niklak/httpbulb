@@ -16,6 +16,7 @@ func newMethodResponse(r *http.Request) (response MethodsResponse, err error) {
 		Headers: getRequestHeader(r),
 		Origin:  getIP(r),
 		URL:     getAbsoluteURL(r),
+		Proto:   r.Proto,
 	}
 
 	ct, _, _ := strings.Cut(r.Header.Get("Content-Type"), ";")

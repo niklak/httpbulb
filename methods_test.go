@@ -2,10 +2,10 @@ package httpbulb
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -68,45 +68,79 @@ func Test_Get(t *testing.T) {
 
 	require.Equal(t, expectedArgs, result.Args)
 
-	parsedURL, err := url.Parse(result.URL)
-	require.NoError(t, err)
-
-	require.Equal(t, apiURL.Host, parsedURL.Host)
-
-	log.Printf("%#v", result.URL)
+	require.Equal(t, apiURL.Host, result.Headers.Get("Host"))
 }
 
-func Test_HttpsGet(t *testing.T) {
+func Test_Http2Client(t *testing.T) {
+
+	type testArgs struct {
+		name      string
+		client    *http.Client
+		wantProto string
+	}
 
 	type serverResponse struct {
-		URL string `json:"url"`
+		URL   string `json:"url"`
+		Proto string `json:"proto"`
 	}
 
 	handleFunc := NewRouter()
-	testServer := httptest.NewTLSServer(handleFunc)
+	testServer := httptest.NewUnstartedServer(handleFunc)
 
+	testServer.EnableHTTP2 = true
+	testServer.StartTLS()
 	defer testServer.Close()
 
 	testUrl := fmt.Sprintf("%s/get", testServer.URL)
 
-	req, err := http.NewRequest("GET", testUrl, nil)
-	require.NoError(t, err)
+	h2Client := testServer.Client()
 
-	resp, err := testServer.Client().Do(req)
-	require.NoError(t, err)
+	h1Client := &http.Client{
+		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
+	}
 
-	require.Equal(t, http.StatusOK, resp.StatusCode)
+	forcedH2Client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, ForceAttemptHTTP2: true},
+	}
 
-	defer resp.Body.Close()
+	/*tlsConfig := h2Client.Transport.(*http.Transport).TLSClientConfig
+	forcedH2Client := &http.Client{
+		Transport: &http.Transport{
+			// without ForceAttemptHTTP2 this tlsConfig will fail
+			TLSClientConfig: tlsConfig, ForceAttemptHTTP2: true},
+	}*/
 
-	body, err := io.ReadAll(resp.Body)
-	require.NoError(t, err)
-	result := new(serverResponse)
+	tests := []testArgs{
+		{name: "Forced HTTP/2.0 - 1", client: h2Client, wantProto: "HTTP/2.0"},
+		{name: "HTTP/1.1", client: h1Client, wantProto: "HTTP/1.1"},
+		{name: "Forced HTTP/2.0", client: forcedH2Client, wantProto: "HTTP/2.0"},
+	}
 
-	err = json.Unmarshal(body, result)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest("GET", testUrl, nil)
+			require.NoError(t, err)
+			resp, err := tt.client.Do(req)
+			require.NoError(t, err)
 
-	require.NoError(t, err)
-	require.True(t, strings.HasPrefix(result.URL, "https://"))
+			require.Equal(t, http.StatusOK, resp.StatusCode)
+
+			defer resp.Body.Close()
+
+			body, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
+			result := new(serverResponse)
+
+			err = json.Unmarshal(body, result)
+
+			require.NoError(t, err)
+			require.True(t, strings.HasPrefix(result.URL, "https://"))
+
+			require.Equal(t, tt.wantProto, result.Proto)
+		})
+	}
+
 }
 
 func Test_MethodNotAllowed(t *testing.T) {
