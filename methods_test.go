@@ -74,9 +74,10 @@ func Test_Get(t *testing.T) {
 func Test_Http2Client(t *testing.T) {
 
 	type testArgs struct {
-		name      string
-		client    *http.Client
-		wantProto string
+		name          string
+		client        *http.Client
+		wantProto     string
+		wantClientErr bool
 	}
 
 	type serverResponse struct {
@@ -95,7 +96,9 @@ func Test_Http2Client(t *testing.T) {
 
 	h2Client := testServer.Client()
 
-	h1Client := &http.Client{
+	h1Client := &http.Client{}
+
+	h1ClientInsecure := &http.Client{
 		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
 	}
 
@@ -112,9 +115,10 @@ func Test_Http2Client(t *testing.T) {
 	}*/
 
 	tests := []testArgs{
-		{name: "Forced HTTP/2.0 - 1", client: h2Client, wantProto: "HTTP/2.0"},
-		{name: "HTTP/1.1", client: h1Client, wantProto: "HTTP/1.1"},
-		{name: "Forced HTTP/2.0", client: forcedH2Client, wantProto: "HTTP/2.0"},
+		{name: "Forced secure HTTP/2.0", client: h2Client, wantProto: "HTTP/2.0"},
+		{name: "Forced insecure HTTP/2.0", client: forcedH2Client, wantProto: "HTTP/2.0"},
+		{name: "HTTP/1.1 - Insecure", client: h1ClientInsecure, wantProto: "HTTP/1.1"},
+		{name: "HTTP/1.1 - Without CA Certs", client: h1Client, wantClientErr: true},
 	}
 
 	for _, tt := range tests {
@@ -122,14 +126,18 @@ func Test_Http2Client(t *testing.T) {
 			req, err := http.NewRequest("GET", testUrl, nil)
 			require.NoError(t, err)
 			resp, err := tt.client.Do(req)
+			if tt.wantClientErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			require.Equal(t, http.StatusOK, resp.StatusCode)
 
-			defer resp.Body.Close()
-
 			body, err := io.ReadAll(resp.Body)
 			require.NoError(t, err)
+			resp.Body.Close()
+
 			result := new(serverResponse)
 
 			err = json.Unmarshal(body, result)
@@ -140,7 +148,6 @@ func Test_Http2Client(t *testing.T) {
 			require.Equal(t, tt.wantProto, result.Proto)
 		})
 	}
-
 }
 
 func Test_MethodNotAllowed(t *testing.T) {
