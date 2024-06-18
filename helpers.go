@@ -71,6 +71,11 @@ func getIP(r *http.Request) string {
 	}
 	return ip
 }
+func getRequestHeader(r *http.Request) http.Header {
+	h := r.Header.Clone()
+	h.Set("Host", r.Host)
+	return h
+}
 
 func writeJsonResponse(w http.ResponseWriter, code int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")

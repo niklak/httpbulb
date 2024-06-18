@@ -13,7 +13,7 @@ func newMethodResponse(r *http.Request) (response MethodsResponse, err error) {
 	var body []byte
 	response = MethodsResponse{
 		Args:    r.URL.Query(),
-		Headers: r.Header,
+		Headers: getRequestHeader(r),
 		Origin:  getIP(r),
 		URL:     getAbsoluteURL(r),
 	}

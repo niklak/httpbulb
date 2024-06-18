@@ -5,7 +5,7 @@ import (
 )
 
 func HeadersHandle(w http.ResponseWriter, r *http.Request) {
-	writeJsonResponse(w, http.StatusOK, HeadersResponse{Headers: r.Header})
+	writeJsonResponse(w, http.StatusOK, HeadersResponse{Headers: getRequestHeader(r)})
 }
 
 func IpHandle(w http.ResponseWriter, r *http.Request) {
