@@ -23,6 +23,16 @@ Go 1.18
 go get -u github.com/niklak/httpbulb
 `
 
+
+## The main differences between `httpbin` and `httpbulb`
+
+- `args`, `form`, `files` and `headers` fields are represented by `map[string][]string`.
+- `/status/{code}` endpoint does not handle status codes lesser than 200 or greater than 599.
+- `/cookies-list` -- a new endpoint that returns a cookie list (`[]http.Cookie`) in the same order as it was received and parsed on the go http server.
+- `/images`, `/encoding/utf8`, `/html`, `/json`, `/xml` endpoints support `Range` requests.
+- `/delete`, `/get`, `/patch`, `/post`, `/put` endpoints also return field `proto` which can help to detect HTTP version of your http client.
+
+
 ## Examples
 
 The main approach is to use `httpbulb` with `httptest.Server`.
@@ -185,10 +195,3 @@ func Test_Http2Client(t *testing.T) {
 |`/anything`|`DELETE`<br>`GET`<br>`PATCH`<br>`POST`<br>`PUT`|Returns anything passed in request data.|
 |`/anything/{anything}`|`DELETE`<br>`GET`<br>`PATCH`<br>`POST`<br>`PUT`|Returns anything passed in request data.|
 
-## The main differences between `httpbin` and `httpbulb`
-
-- `args`, `form`, `files` and `headers` fields are represented by `map[string][]string`.
-- `/status/{code}` endpoint does not handle status codes lesser than 200 or greater than 599.
-- `/cookies-list` -- a new endpoint that returns a cookie list (`[]http.Cookie`) in the same order as it was received and parsed on the go http server.
-- `/images`, `/encoding/utf8`, `/html`, `/json`, `/xml` endpoints support `Range` requests.
-- `/delete`, `/get`, `/patch`, `/post`, `/put` endpoints also return field `proto` which can help to detect HTTP version of your http client.
