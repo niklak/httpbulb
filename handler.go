@@ -6,8 +6,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func NewRouter() *chi.Mux {
+func NewRouter(middlewares ...func(http.Handler) http.Handler) *chi.Mux {
 	r := chi.NewRouter()
+
+	r.Use(middlewares...)
+
 	r.Delete("/delete", MethodsHandle)
 	r.Get("/get", MethodsHandle)
 	r.Patch("/patch", MethodsHandle)
