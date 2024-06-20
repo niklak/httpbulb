@@ -18,7 +18,7 @@ import (
 const logPrefix string = "BULB SERVER"
 
 type config struct {
-	Host         string        `env:"HOST" envDefault:"localhost"`
+	Host         string        `env:"HOST"`
 	Port         int           `env:"PORT" envDefault:"8080"`
 	Addr         string        `env:"ADDR,expand" envDefault:"$HOST:${PORT}"`
 	ReadTimeout  time.Duration `env:"READ_TIMEOUT" envDefault:"120s"`
