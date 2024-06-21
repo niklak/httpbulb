@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -17,6 +18,12 @@ const (
 var trueClientIP = "True-Client-IP"
 var xForwardedFor = "X-Forwarded-For"
 var xRealIP = "X-Real-IP"
+
+var prettifyJSON = false
+
+func init() {
+	_, prettifyJSON = os.LookupEnv("SERVER_PRETTY_JSON")
+}
 
 //go:embed assets/*
 var assetsFS embed.FS
@@ -82,7 +89,13 @@ func getRequestHeader(r *http.Request) http.Header {
 func writeJsonResponse(w http.ResponseWriter, code int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(data)
+	enc := json.NewEncoder(w)
+
+	if prettifyJSON {
+		enc.SetIndent("", "  ")
+	}
+
+	enc.Encode(data)
 }
 
 // serveFileFS serves a file from the given filesystem
