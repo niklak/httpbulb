@@ -6,6 +6,8 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// NewRouter returns a new chi.Mux with predefined http handlers.
+// It also accepts chi middlewares.
 func NewRouter(middlewares ...func(http.Handler) http.Handler) *chi.Mux {
 	r := chi.NewRouter()
 
@@ -74,7 +76,6 @@ func NewRouter(middlewares ...func(http.Handler) http.Handler) *chi.Mux {
 	r.Get("/response-headers", http.HandlerFunc(ResponseHeadersHandle))
 	r.Post("/response-headers", http.HandlerFunc(ResponseHeadersHandle))
 	r.Get("/etag/{etag}", http.HandlerFunc(EtagHandle))
-	//TODO: add documentation
 
 	return r
 }

@@ -75,6 +75,7 @@ func DeleteCookiesHandle(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// CookiesListResponse returns a **list** with request cookies
 func CookiesListHandle(w http.ResponseWriter, r *http.Request) {
 
 	resp := CookiesListResponse{Cookies: r.Cookies()}

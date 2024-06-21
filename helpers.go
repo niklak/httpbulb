@@ -21,12 +21,14 @@ var xRealIP = "X-Real-IP"
 //go:embed assets/*
 var assetsFS embed.FS
 
+// TextError is a shortcut func for writing an error in `text/plain`
 func TextError(w http.ResponseWriter, err string, code int) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(code)
 	fmt.Fprintln(w, err)
 }
 
+// JsonError is a shortcut func for writing an error in `application/json`
 func JsonError(w http.ResponseWriter, err string, code int) {
 
 	if err == "" {

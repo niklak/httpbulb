@@ -107,6 +107,7 @@ func BrotliHandle(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, buf)
 }
 
+// RobotsHandle returns the `text/plain` content for the robots.txt
 func RobotsHandle(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain")

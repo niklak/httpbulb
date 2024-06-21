@@ -73,14 +73,19 @@ type StreamResponse struct {
 	URL string `json:"url"`
 }
 
+// CookiesResponse represents a response for the cookies endpoint
+// It contains a map of cookies, which is cookie name and a list of its values.
 type CookiesResponse struct {
 	Cookies map[string][]string `json:"cookies"`
 }
 
+// CookiesListResponse represents a response for the cookies-list endpoint.
+// In this case, cookies are represented as a list (slice) of `http.Cookie`.
 type CookiesListResponse struct {
 	Cookies []*http.Cookie `json:"cookies"`
 }
 
+// UUIDResponse represents a response with a UUID string.
 type UUIDResponse struct {
 	UUID string `json:"uuid"`
 }
