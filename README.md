@@ -144,6 +144,41 @@ func Test_Http2Client(t *testing.T) {
 
 </details>
 
+It is also possible to use `httpbulb` as a web-server.
+The binary can be built with from `github.com/niklak/httpbulb/cmd/bulb` or you can use docker image `ghcr.io/niklak/httpbulb:latest`.
+
+<details>
+<summary>Running a web-server using docker-compose</summary>
+
+```yaml
+
+name: httpbulb
+
+services:
+  web:
+    image: ghcr.io/niklak/httpbulb:latest
+    restart: unless-stopped
+    volumes:
+    # If you require an HTTPS server, you should link the directories with tls certificates.
+      - "./certs:/certs"
+    ports:
+      # map the bulb port to your external port
+      - :4443:8080
+    environment:
+      # you can set server address as HOST:PORT or just :PORT
+      - SERVER_ADDR=:8080
+      # If you require an HTTPS server, you should set SERVER_CERT_PATH and SERVER_KEY_PATH.
+      # If you work with self-signed certificates, you need to ensure that `root CA` is installed on the requesting machine.
+      # Or you need to mark your requests as insecure. (InsecureSkipVerify: true for Go, or --insecure flag for curl)
+      # If server unable to load certificates, it will produce a warning, but start serving an HTTP server. 
+      - SERVER_CERT_PATH=/certs/server-host.pem
+      - SERVER_KEY_PATH=/certs/server-host-key.pem
+      - SERVER_READ_TIMEOUT=120s
+      - SERVER_WRITE_TIMEOUT=120s
+```
+
+</details>
+
 
 ## Endpoints
 
