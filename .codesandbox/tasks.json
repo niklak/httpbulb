@@ -1,0 +1,21 @@
+{
+  // These tasks will run in order when initializing your CodeSandbox project.
+  "setupTasks": [
+    {
+      "name": "build binary",
+      "command": "go build -o bin/bulb_server cmd/bulb/main.go"
+    }
+  ],
+
+  // These tasks can be run from CodeSandbox. Running one will open a log in the app.
+  "tasks": {
+    "c": {
+      "name": "run server",
+      "command": "./bin/bulb_server",
+      "runAtStart": true,
+      "preview": {
+        "port": 8080
+      }
+    }
+  }
+}
