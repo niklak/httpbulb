@@ -3,6 +3,7 @@
 [![Go](https://github.com/niklak/httpbulb/actions/workflows/go.yml/badge.svg)](https://github.com/niklak/httpbulb/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/niklak/httpbulb)](https://goreportcard.com/report/github.com/niklak/httpbulb)
 
+[![Edit niklak/httpbulb/main](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/p/github/niklak/httpbulb/main?embed=1)
 
 A tool for testing http client capabilities.
 
