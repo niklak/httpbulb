@@ -160,7 +160,7 @@ services:
     restart: unless-stopped
     volumes:
     # If you require an HTTPS server, you should link the directories with tls certificates.
-      - "./certs:/certs"
+      - "./data/certs:/certs"
     ports:
       # map the bulb port to your external port
       - :4443:8080
@@ -175,6 +175,24 @@ services:
       - SERVER_KEY_PATH=/certs/server-host-key.pem
       - SERVER_READ_TIMEOUT=120s
       - SERVER_WRITE_TIMEOUT=120s
+```
+
+After starting the server with `docker compose` its ready to accept requests.
+
+```bash
+
+# with no certificates
+curl -v http://localhost:4443/get
+
+# with self-signed certificates and installed root CA.
+curl -v https://localhost:4443/get
+
+# with self-signed certificates but without installed root CA on requesting machine.
+curl -v --insecure https://localhost:4443/get
+
+# with real certificates
+curl -v https://example.com:4443/get
+
 ```
 
 </details>

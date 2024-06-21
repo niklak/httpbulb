@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     volumes:
     # If you require an HTTPS server, you should link the directories with tls certificates.
-      - "./certs:/certs"
+      - "./data/certs:/certs"
     ports:
       # map the bulb port to your external port
       - :4443:8080
