@@ -32,4 +32,25 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+  
+  codecov:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22'
+
+    - name: Generate coverage report
+      run: go test -race -coverprofile=cov.tmp -covermode=atomic ./...
+    
+    - name: Generating coverate report without internal and example files
+      run: cat cov.tmp | grep -E -v "internal\/|examples\/" > coverage.out
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4.0.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
 
