@@ -2,6 +2,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/niklak/httpbulb.svg)](https://pkg.go.dev/github.com/niklak/httpbulb)
 [![Go](https://github.com/niklak/httpbulb/actions/workflows/go.yml/badge.svg)](https://github.com/niklak/httpbulb/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/niklak/httpbulb)](https://goreportcard.com/report/github.com/niklak/httpbulb)
+[![codecov](https://codecov.io/gh/niklak/httpbulb/graph/badge.svg?token=8GI1ZDHIH8)](https://codecov.io/gh/niklak/httpbulb)
 
 [![Edit niklak/httpbulb/main](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/p/github/niklak/httpbulb/main?embed=1)
 

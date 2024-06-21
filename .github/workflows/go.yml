@@ -47,7 +47,7 @@ jobs:
       run: go test -race -coverprofile=cov.tmp -covermode=atomic ./...
     
     - name: Generating coverate report without internal and example files
-      run: cat cov.tmp | grep -E -v "internal\/|examples\/" > coverage.out
+      run: cat cov.tmp | grep -E -v "internal\/|examples\/|cmd\/" > coverage.out
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4.0.1
