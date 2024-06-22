@@ -1,30 +1,24 @@
-FROM golang:1.22-bookworm
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    libnss3-tools \
-    git\
-    && apt-get clean \
-    && apt-get autoremove \
-    && rm -rf /var/lib/apt/lists/*
+FROM golang:1.22-bookworm as build
 
 
-RUN useradd -ms /bin/bash httpbulb
-
-ENV HOME=/home/httpbulb
-ENV APP_ROOT=${HOME}/httpbulb
+ENV APP_ROOT=/httpbulb
+ENV APP_NAME=bulb_server
 
 COPY . ${APP_ROOT}
-
-WORKDIR ${APP_ROOT}
-
-
 WORKDIR ${APP_ROOT}/cmd/bulb
 
-RUN go build -o bulb_server
+RUN go build -o ${APP_NAME}
 
-RUN chown -R httpbulb:httpbulb ${APP_ROOT}
+
+FROM golang:1.22-bookworm
+
+
+RUN useradd -s /bin/bash httpbulb
+
+ENV APP_NAME=bulb_server
+
+COPY --chown=httpbulb:httpbulb --from=build /httpbulb/cmd/bulb/${APP_NAME} /usr/local/bin/${APP_NAME}
 
 USER httpbulb
 
-ENTRYPOINT ["./bulb_server"]
+ENTRYPOINT ${APP_NAME}
