@@ -24,5 +24,6 @@ services:
       - SERVER_KEY_PATH=/certs/server-host-key.pem
       - SERVER_READ_TIMEOUT=120s
       - SERVER_WRITE_TIMEOUT=120s
+      - SERVER_PRETTY_JSON=true
 
 

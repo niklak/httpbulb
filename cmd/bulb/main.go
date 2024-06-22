@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -52,11 +54,14 @@ func main() {
 
 	r := httpbulb.NewRouter(middleware.Logger, middleware.Recoverer)
 
+	ctx := context.Background()
+
 	srv := &http.Server{
 		Addr:         cfg.Addr,
 		ReadTimeout:  cfg.ReadTimeout,
 		WriteTimeout: cfg.WriteTimeout,
 		Handler:      r,
+		BaseContext:  func(_ net.Listener) context.Context { return ctx },
 	}
 
 	type serverListenFn func() error
@@ -82,14 +87,18 @@ func main() {
 	go func() {
 		log.Printf("[INFO] %s: START SERVING ON %s\n", logPrefix, cfg.Addr)
 		if err := listenAndServe(); err != nil {
-			log.Printf("[WARNING] %s: %v\n", logPrefix, err)
+			if !errors.Is(err, http.ErrServerClosed) {
+				log.Fatalf("[WARNING] %s: %v\n", logPrefix, err)
+			}
 		}
+		log.Printf("[INFO] %s: STOPPED SERVING\n", logPrefix)
 	}()
 
 	<-stop
-	log.Println("[INFO] SERVER: shutting down...")
+	log.Printf("[INFO] %s: shutting down...\n", logPrefix)
 	if err = srv.Shutdown(context.Background()); err != nil {
-		log.Printf("[ERROR] Server: shutdown %v", err)
+		log.Fatalf("[ERROR] %s: shutdown %v\n", logPrefix, err)
 	}
-	log.Println("[INFO] SERVER: gracefully stopped")
+
+	log.Printf("[INFO] %s: gracefully stopped\n", logPrefix)
 }
