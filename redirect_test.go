@@ -49,17 +49,28 @@ func (s *RedirectSuite) TearDownSuite() {
 func (s *RedirectSuite) TestRedirectTo() {
 
 	type testArgs struct {
-		name           string
-		method         string
-		wantStatusCode int
+		name            string
+		method          string
+		statusCode      int
+		wantStatusCode  int
+		noCheckLocation bool
+		ct              string
 	}
 
 	tests := []testArgs{
-		{name: "GET", method: http.MethodGet, wantStatusCode: http.StatusMovedPermanently},
-		{name: "DELETE", method: http.MethodDelete, wantStatusCode: http.StatusMovedPermanently},
-		{name: "POST", method: http.MethodPost, wantStatusCode: http.StatusTemporaryRedirect},
-		{name: "PUT", method: http.MethodPut, wantStatusCode: http.StatusTemporaryRedirect},
-		{name: "PATCH", method: http.MethodPatch, wantStatusCode: http.StatusTemporaryRedirect},
+		{name: "GET", method: http.MethodGet, statusCode: 301, wantStatusCode: 301},
+		{name: "DELETE", method: http.MethodDelete, statusCode: 301, wantStatusCode: 301},
+		{name: "POST", method: http.MethodPost, statusCode: 307, wantStatusCode: 307},
+		{name: "PUT", method: http.MethodPut, statusCode: 307, wantStatusCode: 307},
+		{name: "PATCH", method: http.MethodPatch, statusCode: 307, wantStatusCode: 307},
+		{name: "GET ignore 200", method: http.MethodGet, statusCode: 200, wantStatusCode: 302},
+		{
+			name:            "POST bad content-type",
+			method:          http.MethodPost,
+			wantStatusCode:  400,
+			ct:              "x-www-form-urlencoded",
+			noCheckLocation: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -83,7 +94,11 @@ func (s *RedirectSuite) TestRedirectTo() {
 				form.Set("url", dstURL)
 				form.Set("status", strconv.Itoa(tt.wantStatusCode))
 				body = strings.NewReader(form.Encode())
-				headers.Set("Content-Type", "application/x-www-form-urlencoded")
+				ct := tt.ct
+				if ct == "" {
+					ct = "application/x-www-form-urlencoded"
+				}
+				headers.Set("Content-Type", ct)
 			}
 			req, err := http.NewRequest(tt.method, apiURL.String(), body)
 			require.NoError(t, err)
@@ -93,6 +108,9 @@ func (s *RedirectSuite) TestRedirectTo() {
 			io.Copy(io.Discard, resp.Body)
 			resp.Body.Close()
 			require.Equal(t, tt.wantStatusCode, resp.StatusCode)
+			if tt.noCheckLocation {
+				return
+			}
 			require.Equal(t, dstURL, resp.Header.Get("Location"))
 		})
 	}
