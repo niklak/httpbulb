@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -54,14 +53,11 @@ func main() {
 
 	r := httpbulb.NewRouter(middleware.Logger, middleware.Recoverer)
 
-	ctx := context.Background()
-
 	srv := &http.Server{
 		Addr:         cfg.Addr,
 		ReadTimeout:  cfg.ReadTimeout,
 		WriteTimeout: cfg.WriteTimeout,
 		Handler:      r,
-		BaseContext:  func(_ net.Listener) context.Context { return ctx },
 	}
 
 	type serverListenFn func() error
