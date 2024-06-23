@@ -17,6 +17,46 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+type digestCredentials struct {
+	username  string
+	realm     string
+	nonce     string
+	uri       string
+	response  string
+	qop       string
+	nc        string
+	cnonce    string
+	algorithm string
+}
+
+func (d *digestCredentials) fromMap(m map[string]string) *digestCredentials {
+
+	for k, v := range m {
+		switch k {
+		case "username":
+			d.username = v
+		case "realm":
+			d.realm = v
+		case "nonce":
+			d.nonce = v
+		case "uri":
+			d.uri = v
+		case "response":
+			d.response = v
+		case "qop":
+			d.qop = v
+		case "nc":
+			d.nc = v
+		case "cnonce":
+			d.cnonce = v
+		case "algorithm":
+			d.algorithm = v
+		}
+	}
+	return d
+
+}
+
 // DigestAuthHandle prompts the user for authorization using HTTP Digest Auth.
 func DigestAuthHandle(w http.ResponseWriter, r *http.Request) {
 	user := chi.URLParam(r, "user")
@@ -36,7 +76,8 @@ func DigestAuthHandle(w http.ResponseWriter, r *http.Request) {
 		requireCookie = true
 	}
 
-	// Actually `algorithm` path parameter is not relevant, because algorithm will be taken from Authorization header.
+	// Actually `algorithm` path parameter is not relevant,
+	// because algorithm will be taken from Authorization header.
 	// It will be relevant only if the Authorization header is not set or is not Digest.
 
 	switch algorithm {
@@ -70,7 +111,7 @@ func DigestAuthHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currentNonce := credentials["nonce"]
+	currentNonce := credentials.nonce
 
 	staleAfterValue := getCookie(r, "stale_after")
 
@@ -101,7 +142,7 @@ func DigestAuthHandle(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func parseDigestAuth(authHeader string) (credentials map[string]string, err error) {
+func parseDigestAuth(authHeader string) (dig *digestCredentials, err error) {
 
 	if authHeader == "" {
 		err = fmt.Errorf("missing Authorization header")
@@ -116,22 +157,21 @@ func parseDigestAuth(authHeader string) (credentials map[string]string, err erro
 		return
 	}
 
-	credentials = parseHeaderValues(authInfo)
+	cm := parseHeaderValues(authInfo)
 	requiredCredentials := []string{"username", "realm", "nonce", "uri", "response"}
 
 	for _, cred := range requiredCredentials {
-		if _, ok := credentials[cred]; !ok {
-			err = fmt.Errorf("missing required credential %s", cred)
+		if _, ok := cm[cred]; !ok {
+			err = fmt.Errorf("missing required credential %q", cred)
 			return
 		}
 	}
 
-	if _, hasQop := credentials["qop"]; !hasQop {
-		_, hasNC := credentials["nc"]
-		_, hasCNonce := credentials["cnonce"]
+	dig = (&digestCredentials{}).fromMap(cm)
 
-		if !hasNC || !hasCNonce {
-			err = fmt.Errorf("missing required credentials nc and cnonce")
+	if dig.qop != "" {
+		if dig.nc == "" || dig.cnonce == "" {
+			err = fmt.Errorf("missing required credentials 'nc' and 'cnonce'")
 			return
 		}
 	}
@@ -213,41 +253,36 @@ func ha2(method, uri, algorithm string) string {
 	return hash(a2, algorithm)
 }
 
-func compileDigestResponse(credentials map[string]string, password, method, uri string) string {
-	algorithm := credentials["algorithm"]
-	qop := credentials["qop"]
-	nonce := credentials["nonce"]
-	nc := credentials["nc"]
-	cnonce := credentials["cnonce"]
+func compileDigestResponse(dig *digestCredentials, password, method, uri string) string {
 
-	ha1Value := ha1(credentials["realm"], credentials["username"], password, algorithm)
-	ha2Value := ha2(method, uri, algorithm)
+	ha1Value := ha1(dig.realm, dig.username, password, dig.algorithm)
+	ha2Value := ha2(method, uri, dig.algorithm)
 
 	var resp string
-	switch qop {
+	switch dig.qop {
 	case "auth", "auth-int":
-		resp = fmt.Sprintf("%s:%s:%s:%s:%s:%s", ha1Value, nonce, nc, cnonce, qop, ha2Value)
+		resp = fmt.Sprintf("%s:%s:%s:%s:%s:%s", ha1Value, dig.nonce, dig.nc, dig.cnonce, dig.qop, ha2Value)
 
 	default:
 		// actually qop must be either `auth` or `auth-int`
 		// TODO: remove support for custom
-		resp = fmt.Sprintf("%s:%s:%s", ha1Value, nonce, ha2Value)
+		resp = fmt.Sprintf("%s:%s:%s", ha1Value, dig.nonce, ha2Value)
 	}
 
-	return hash([]byte(resp), algorithm)
+	return hash([]byte(resp), dig.algorithm)
 }
 
-func checkDigestAuth(r *http.Request, credentials map[string]string, username, password string) (ok bool) {
+func checkDigestAuth(r *http.Request, dig *digestCredentials, username, password string) (ok bool) {
 
-	if credentials == nil {
+	if dig == nil {
 		return
 	}
-	if credentials["username"] != username {
+	if dig.username != username {
 		return
 	}
 
-	responseHash := compileDigestResponse(credentials, password, r.Method, getAbsoluteURL(r))
-	expectedHash := credentials["response"]
+	responseHash := compileDigestResponse(dig, password, r.Method, getAbsoluteURL(r))
+	expectedHash := dig.response
 	if subtle.ConstantTimeCompare([]byte(responseHash), []byte(expectedHash)) == 1 {
 		ok = true
 	}
@@ -261,5 +296,3 @@ func nextStaleAfterValue(staleAfter string) string {
 	return "never"
 
 }
-
-// TODO: clean up this file

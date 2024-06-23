@@ -44,17 +44,23 @@ func (s *AuthDigestSuite) TestDigestAuth() {
 		wantAuth       bool
 		wantStatusCode int
 		staleAfter     string
+		skippingKeys   []string
 	}
 
 	tests := []testArgs{
 		{name: "valid MD5 digest",
 			algorithm: "MD5", qop: "auth", wantAuth: true, wantStatusCode: http.StatusOK},
 		{name: "staled MD5 digest",
-			algorithm: "MD5", qop: "auth", wantAuth: false, wantStatusCode: http.StatusUnauthorized, staleAfter: "0"},
+			algorithm: "MD5", qop: "auth", wantStatusCode: http.StatusUnauthorized, staleAfter: "0"},
 		{name: "valid SHA-256 digest",
 			algorithm: "SHA-256", qop: "auth", wantAuth: true, wantStatusCode: http.StatusOK},
 		{name: "valid SHA-512 digest",
 			algorithm: "SHA-512", qop: "auth", wantAuth: true, wantStatusCode: http.StatusOK},
+
+		{name: "missing nc",
+			algorithm: "MD5", qop: "auth", wantStatusCode: http.StatusUnauthorized, skippingKeys: []string{"nc"}},
+		{name: "missing cnonce",
+			algorithm: "MD5", qop: "auth", wantStatusCode: http.StatusUnauthorized, skippingKeys: []string{"cnonce"}},
 	}
 
 	username := "mememe"
@@ -76,7 +82,13 @@ func (s *AuthDigestSuite) TestDigestAuth() {
 				"algorithm": tt.algorithm,
 			}
 
-			digestResp := compileDigestResponse(credentials, password, http.MethodGet, addr)
+			for _, key := range tt.skippingKeys {
+				delete(credentials, key)
+			}
+
+			dig := (&digestCredentials{}).fromMap(credentials)
+
+			digestResp := compileDigestResponse(dig, password, http.MethodGet, addr)
 
 			credentials["response"] = digestResp
 
