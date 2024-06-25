@@ -313,7 +313,7 @@ func (s *DynamicSuite) TestRange() {
 
 	numBytes := 30
 	rangeHeader := "bytes=10-24"
-	chunkSize := 5
+	chunkSize := 4
 	//duration is used only to calculate a pause per byte
 	dur := 2
 	apiURL := fmt.Sprintf("%s/range/%d?duration=%d&chunk_size=%d", s.testServer.URL, numBytes, dur, chunkSize)

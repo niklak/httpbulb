@@ -394,3 +394,55 @@ func Test_AnythingAnything(t *testing.T) {
 	json.Unmarshal(body, result)
 	require.Equal(t, testUrl, result.URL)
 }
+
+func TestMethodsInternalError(t *testing.T) {
+
+	type testArgs struct {
+		name        string
+		apiURL      string
+		method      string
+		contentType string
+		body        []byte
+	}
+
+	testServer := httptest.NewServer(NewRouter())
+	defer testServer.Close()
+
+	tests := []testArgs{
+		{
+			name:        "bad form",
+			apiURL:      fmt.Sprintf("%s/post", testServer.URL),
+			method:      http.MethodPost,
+			contentType: "application/x-www-form-urlencoded",
+			body:        []byte("%"),
+		},
+		{
+			name:        "bad multipart form",
+			apiURL:      fmt.Sprintf("%s/post", testServer.URL),
+			method:      http.MethodPost,
+			contentType: "multipart/form-data",
+			body:        []byte("%"),
+		},
+		{
+			name:        "bad json",
+			apiURL:      fmt.Sprintf("%s/post", testServer.URL),
+			method:      http.MethodPost,
+			contentType: "application/json",
+			body:        []byte("%"),
+		},
+	}
+
+	for _, tt := range tests {
+		req, err := http.NewRequest(tt.method, tt.apiURL, bytes.NewReader(tt.body))
+		require.NoError(t, err)
+
+		req.Header.Set("Content-Type", tt.contentType)
+
+		resp, err := httpClient.Do(req)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+	}
+}
