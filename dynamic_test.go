@@ -312,10 +312,11 @@ func (s *DynamicSuite) TestLinks() {
 func (s *DynamicSuite) TestRange() {
 
 	numBytes := 30
-	rangeHeader := "bytes=10-20"
+	rangeHeader := "bytes=10-24"
+	chunkSize := 5
 	//duration is used only to calculate a pause per byte
 	dur := 2
-	apiURL := fmt.Sprintf("%s/range/%d?duration=%d", s.testServer.URL, numBytes, dur)
+	apiURL := fmt.Sprintf("%s/range/%d?duration=%d&chunk_size=%d", s.testServer.URL, numBytes, dur, chunkSize)
 
 	req, err := http.NewRequest("GET", apiURL, nil)
 	s.Require().NoError(err)
@@ -334,11 +335,11 @@ func (s *DynamicSuite) TestRange() {
 
 	expectedHeaders := http.Header{
 		"Etag":           []string{fmt.Sprintf("range%d", numBytes)},
-		"Content-Length": []string{"11"},
-		"Content-Range":  []string{"bytes 10-20/30"},
+		"Content-Length": []string{"15"},
+		"Content-Range":  []string{"bytes 10-24/30"},
 	}
 
-	s.Require().Equal("klmnopqrstu", string(body))
+	s.Require().Equal("klmnopqrstuvwxy", string(body))
 	s.Require().Subset(resp.Header, expectedHeaders)
 
 }

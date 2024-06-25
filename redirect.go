@@ -28,7 +28,7 @@ func RedirectToHandle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err = r.ParseForm(); err != nil {
-			http.Error(w, "unable to parse form", http.StatusBadRequest)
+			http.Error(w, "unable to parse form", http.StatusInternalServerError)
 			return
 		}
 		dstURL = r.Form.Get("url")
@@ -89,7 +89,7 @@ func redirectHandle(w http.ResponseWriter, r *http.Request, absolute bool) {
 	// actually this case is impossible, bad request is handled by chi router,
 	// and n can be matched only as a number, chi will return 404 if it's not a number
 	if err != nil {
-		TextError(w, err.Error(), http.StatusBadRequest)
+		TextError(w, "n: bad parameter", http.StatusBadRequest)
 		return
 	}
 	if n < 1 {
