@@ -17,7 +17,7 @@ func ImageHandle(w http.ResponseWriter, r *http.Request) {
 
 	var imgPath string
 	switch imgFormat {
-	case "svg", "jpeg", "png", "webp":
+	case "svg", "jpeg", "png", "webp", "avif":
 		imgPath = fmt.Sprintf("assets/images/im.%s", imgFormat)
 	default:
 		w.WriteHeader(http.StatusNotFound)
@@ -31,23 +31,31 @@ func ImageHandle(w http.ResponseWriter, r *http.Request) {
 // ImageAcceptHandle returns an image based on the client's Accept header.
 func ImageAcceptHandle(w http.ResponseWriter, r *http.Request) {
 
+	//TODO: consider handling ;q= for weight or drop this idea
+	//TODO: what about */*
 	accept := r.Header.Get("Accept")
+	cut := "image/"
+	var found bool
+	if _, accept, found = strings.Cut(accept, cut); !found {
+		JsonError(w, "Client did not request a supported media type.", http.StatusNotAcceptable)
+		return
+	}
+
+	if imgEndPos := strings.IndexAny(accept, ",;"); imgEndPos > 0 {
+		accept = accept[:imgEndPos]
+	}
+
 	var imgPath string
-	if strings.Contains(accept, "image/webp") {
-		imgPath = "assets/images/im.webp"
-	} else if strings.Contains(accept, "image/svg+xml") {
+
+	switch accept {
+	case "jpeg", "png", "webp", "avif":
+		imgPath = fmt.Sprintf("assets/images/im.%s", accept)
+	case "svg+xml":
 		imgPath = "assets/images/im.svg"
-	} else if strings.Contains(accept, "image/jpeg") {
-		imgPath = "assets/images/im.jpeg"
-	} else if strings.Contains(accept, "image/png") ||
-		strings.Contains(accept, "image/*") {
+	case "*":
 		imgPath = "assets/images/im.png"
-	} else {
-		JsonError(
-			w,
-			"Client did not request a supported media type.",
-			http.StatusNotAcceptable,
-		)
+	default:
+		JsonError(w, "Client did not request a supported media type.", http.StatusNotAcceptable)
 		return
 	}
 	serveFileFS(w, r, assetsFS, imgPath)

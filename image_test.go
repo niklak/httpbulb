@@ -43,6 +43,7 @@ func (s *ImageSuite) TestImage() {
 		{name: "jpeg", apiPath: "/image/jpeg", wantContentType: "image/jpeg", wantStatusCode: http.StatusOK},
 		{name: "webp", apiPath: "/image/webp", wantContentType: "image/webp", wantStatusCode: http.StatusOK},
 		{name: "not found", apiPath: "/image/gif", wantContentType: "text/plain; charset=utf-8", wantStatusCode: http.StatusNotFound},
+		{name: "avif", apiPath: "/image/avif", wantContentType: "image/avif", wantStatusCode: http.StatusOK},
 	}
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
@@ -78,7 +79,9 @@ func (s *ImageSuite) TestImageAccept() {
 		{name: "jpeg", accept: "image/jpeg", wantContentType: "image/jpeg", wantStatusCode: http.StatusOK},
 		{name: "webp", accept: "image/webp", wantContentType: "image/webp", wantStatusCode: http.StatusOK},
 		{name: "gif", accept: "image/gif", wantContentType: "application/json", wantStatusCode: http.StatusNotAcceptable},
+		{name: "gif", accept: "text/plain", wantContentType: "application/json", wantStatusCode: http.StatusNotAcceptable},
 		{name: "any", accept: "image/*", wantContentType: "image/png", wantStatusCode: http.StatusOK},
+		{name: "avif", accept: "image/avif, image/webp, */*;q=0.8", wantContentType: "image/avif", wantStatusCode: http.StatusOK},
 	}
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {

@@ -69,7 +69,7 @@ func NewRouter(middlewares ...func(http.Handler) http.Handler) *chi.Mux {
 	r.Get("/relative-redirect/{n:[0-9]+}", http.HandlerFunc(RelativeRedirectHandle))
 
 	r.Get("/image", http.HandlerFunc(ImageAcceptHandle))
-	r.Get("/image/{format:svg|png|jpeg|webp}", http.HandlerFunc(ImageHandle))
+	r.Get("/image/{format:svg|png|jpeg|webp|avif}", http.HandlerFunc(ImageHandle))
 
 	r.Get("/cache", http.HandlerFunc(CacheHandle))
 	r.Get("/cache/{value:[0-9]+}", http.HandlerFunc(CacheControlHandle))
