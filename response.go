@@ -89,3 +89,11 @@ type CookiesListResponse struct {
 type UUIDResponse struct {
 	UUID string `json:"uuid"`
 }
+
+//	ErrorResponse represents an error response from the server.
+//
+// It is used to return errors in JSON format.
+// It contains a single field, "error", which holds the error message.
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
