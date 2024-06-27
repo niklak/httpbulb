@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>HTTPBulb</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+
+<body>
+  <div class="container mx-auto">
+    <h1 class="font-mono">HTTPBulb</h1>
+    <div class="font-mono">
+      A tool for testing http client capabilities. An implementation of
+      httpbinfor Go.
+    </div>
+    <div class="m-5"></div>
+    <div class="relative">
+      <table class="font-mono border-collapse border border-slate-400">
+        <thead>
+          <tr>
+            <th>Route</th>
+            <th>Methods</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left">
+              /delete<br />
+              <a href="/get">/get</a><br />
+              /patch<br />
+              /post<br />
+              /put
+            </td>
+            <td>
+              DELETE<br />GET<br />PATCH<br />POST<br />PUT
+            </td>
+            <td>
+              These are basic endpoints. They return a response with request's
+              common information.
+              <strong>Unlike the original httpbin implementation, this
+                handler doesn't read the request body for
+                DELETE and GET requests</strong>. args, files, form, and
+              headers are always represented by a map of string
+              lists (slices).
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/basic-auth/usr/passwd">/basic-auth/{user}/{passwd}</a></td>
+            <td>GET</td>
+            <td>
+              Prompts the user for authorization using HTTP Basic Auth.
+              Returns 401 if authorization is failed.
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/hidden-basic-auth/usr/passwd">/hidden-basic-auth/{user}/{passwd}</a></td>
+            <td>GET</td>
+            <td>
+              Prompts the user for authorization using HTTP Basic Auth.
+              Returns 404 if authorization is failed.
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              /digest-auth/{qop}/{user}/{passwd}<br /><br />
+              /digest-auth/{qop}/{user}/{passwd}/{algorithm}<br /><br />
+              /digest-auth/{qop}/{user}/{passwd}/{algorithm}/{stale_after}
+            </td>
+            <td>GET</td>
+            <td>
+              Prompts the user for authorization using HTTP Digest Auth.
+              Returns 401 or 403 if authorization is failed.
+            </td>
+          </tr>
+          <tr>
+            <td align="left">/bearer</td>
+            <td>GET</td>
+            <td>
+              Prompts the user for authorization using bearer authentication.
+              Returns 401 if authorization is failed.
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/status/200,206,400,421">/status/{codes}</a></td>
+            <td>
+              DELETE<br />GET<br />PATCH<br />POST<br />PUT
+            </td>
+            <td>
+              Returns status code or random status code if more than one are
+              given.
+              <strong>This handler does not handle status codes lesser than 200 or
+                greater than 599.</strong>
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/headers">/headers</a></td>
+            <td>GET</td>
+            <td>Return the incoming request's HTTP headers.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="ip">/ip</a></td>
+            <td>GET</td>
+            <td>Returns the requester's IP Address.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/user-agent">/user-agent</a></td>
+            <td>GET</td>
+            <td>Return the incoming requests's User-Agent header.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/cache">/cache</a></td>
+            <td>GET</td>
+            <td>
+              Returns a 304 if an If-Modified-Since header or If-None-Match is
+              present. Returns the same as a /get otherwise.
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/cache/60">/cache/{seconds}</a></td>
+            <td>GET</td>
+            <td>Sets a Cache-Control header for n seconds.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/etag/123456789asdfgh">/etag/{etag}</a></td>
+            <td>GET</td>
+            <td>
+              Assumes the resource has the given etag and responds to
+              If-None-Match and If-Match headers appropriately.
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/response-headers?X-Test=123">/response-headers</a></td>
+            <td>GET<br />POST</td>
+            <td>Returns a set of response headers from the query string.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/brotli">/brotli</a></td>
+            <td>GET</td>
+            <td>Returns Brotli-encoded data.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/deflate">/deflate</a></td>
+            <td>GET</td>
+            <td>Returns Deflate-encoded data.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/deny">/deny</a></td>
+            <td>GET</td>
+            <td>Returns page denied by robots.txt rules.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/encoding/utf8">/encoding/utf8</a></td>
+            <td>GET</td>
+            <td>Returns a UTF-8 encoded body.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/gzip">/gzip</a></td>
+            <td>GET</td>
+            <td>Returns Gzip-encoded data.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/html">/html</a></td>
+            <td>GET</td>
+            <td>Returns a simple HTML document.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/json">/json</a></td>
+            <td>GET</td>
+            <td>Returns a simple JSON document.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/robots.txt">/robots.txt</a></td>
+            <td>GET</td>
+            <td>Returns some robots.txt rules.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/xml">/xml</a></td>
+            <td>GET</td>
+            <td>Returns a simple XML document.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/base64/YmFzZTY0LWRlY29kZSB0ZXN0Cg==">/base64/{value}</a></td>
+            <td>GET</td>
+            <td>Decodes base64url-encoded string.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/bytes/512">/bytes/{n}</a></td>
+            <td>GET</td>
+            <td>Returns n random bytes generated with given seed.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/delay/2">/delay/{delay}</a></td>
+            <td>
+              DELETE<br />GET<br />PATCH<br />POST<br />PUT
+            </td>
+            <td>Returns a delayed response (max of 10 seconds).</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/drip?code=200&delay=2&duration=2&numbytes=10">/drip</a></td>
+            <td>GET</td>
+            <td>
+              Drips data over a duration after an optional initial delay.
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/links/5/3">/links/{n}/{offset}</a></td>
+            <td>GET</td>
+            <td>
+              Generates a page containing n links to other pages which do the
+              same.
+            </td>
+          </tr>
+          <tr>
+            <td align="left">/range/{numbytes}</td>
+            <td>GET</td>
+            <td>
+              Streams n random bytes generated with given seed, at given chunk
+              size per packet. Supports Accept-Ranges and
+              Content-Range headers.
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/stream-bytes/1024?chunk_size=512">/stream-bytes/{n}</a></td>
+            <td>GET</td>
+            <td>
+              Streams n random bytes generated with given seed, at given chunk
+              size per packet.
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/stream/3">/stream/{n}</a></td>
+            <td>GET</td>
+            <td>Streams n json messages.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/uuid">/uuid</a></td>
+            <td>GET</td>
+            <td>Returns a UUID4.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/cookies">/cookies</a></td>
+            <td>GET</td>
+            <td>Returns cookie data.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/cookies-list">/cookies-list</a></td>
+            <td>GET</td>
+            <td>
+              <strong>Returns a cookie list ([]http.Cookie) in the
+                same order as it was received and parsed on the
+                server.</strong>
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/cookies/delete">/cookies/delete</a></td>
+            <td>GET</td>
+            <td>
+              Deletes cookie(s) as provided by the query string and redirects
+              to cookie list.
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/cookies/set">/cookies/set</a></td>
+            <td>GET</td>
+            <td>
+              Sets cookie(s) as provided by the query string and redirects to
+              cookie list.
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/cookies/set/x-cookie/1">/cookies/set/{name}/{value}</a></td>
+            <td>GET</td>
+            <td>Sets a cookie and redirects to cookie list.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/image">/image</a></td>
+            <td>GET</td>
+            <td>
+              Returns a simple image of the type suggest by the Accept header.
+              Also supports a Range requests
+            </td>
+          </tr>
+          <tr>
+            <td align="left">
+              <a href="/image/png">/image/{format:svg|png|jpeg|webp}</a>
+            </td>
+            <td>GET</td>
+            <td>
+              Returns an image with the given format. If the
+              format is not matched it returns 404
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/absolute-redirect/3">/absolute-redirect/{n}</a></td>
+            <td>GET</td>
+            <td>
+              Absolutely 302 Redirects n times.
+              Location header will be an absolute URL.
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/redirect-to?status=301&url=%2Fget">/redirect-to</a></td>
+            <td>
+              DELETE<br />GET<br />PATCH<br />POST<br />PUT
+            </td>
+            <td>
+              302/3XX Redirects to the given URL. url parameter
+              is required and status parameter is optional.
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/redirect/3?absolute=true">/redirect/{n}</a></td>
+            <td>GET</td>
+            <td>
+              302 Redirects n times. Location header will be an
+              absolute if absolute=true was sent as a query
+              parameter.
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/relative-redirect/3">/relative-redirect/{n}</a></td>
+            <td>GET</td>
+            <td>
+              Relatively 302 Redirects n times. Location header
+              will be a relative URL.
+            </td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/anything">/anything</a></td>
+            <td>
+              DELETE<br />GET<br />PATCH<br />POST<br />PUT
+            </td>
+            <td>Returns anything passed in request data.</td>
+          </tr>
+          <tr>
+            <td align="left"><a href="/anything/thing">/anything/{anything}</a></td>
+            <td>
+              DELETE<br />GET<br />PATCH<br />POST<br />PUT
+            </td>
+            <td>Returns anything passed in request data.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="m-10"></div>
+  </div>
+</body>
+
+</html>

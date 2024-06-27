@@ -53,6 +53,9 @@ func main() {
 
 	r := httpbulb.NewRouter(middleware.Logger, middleware.Recoverer)
 
+	r.Get("/", httpbulb.IndexHandle)
+	r.Get("/style.css", httpbulb.StyleHandle)
+
 	srv := &http.Server{
 		Addr:         cfg.Addr,
 		ReadTimeout:  cfg.ReadTimeout,

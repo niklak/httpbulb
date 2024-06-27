@@ -72,7 +72,7 @@ func ResponseHeadersHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	responseHeaders := w.Header()
 	w.WriteHeader(http.StatusOK)
+	responseHeaders := w.Header()
 	json.NewEncoder(w).Encode(responseHeaders)
 }

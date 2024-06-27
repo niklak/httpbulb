@@ -190,8 +190,8 @@ func DripHandle(w http.ResponseWriter, r *http.Request) {
 		code = http.StatusOK
 	}
 
-	if code < 100 || code > 599 {
-		JsonError(w, "code: status code must be between 100 and 599", http.StatusBadRequest)
+	if code < 200 || code > 599 {
+		JsonError(w, "code: status code must be between 200 and 599", http.StatusBadRequest)
 		return
 	}
 
