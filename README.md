@@ -242,11 +242,10 @@ curl -v https://example.com:4443/get
 |`/cookies/set`|`GET`|Sets cookie(s) as provided by the query string and redirects to cookie list.|
 |`/cookies/set/{name}/{value}`|`GET`|Sets a cookie and redirects to cookie list.|
 |`/image`|`GET`|Returns a simple image of the type suggest by the Accept header. Also supports a `Range` requests|
-|`/image/{format:svg\|png\|jpeg\|webp|avif}`|`GET`| Returns an image with the given format. If the `format` is not matched it returns 404|
+|`/image/{format:svg\|png\|jpeg\|webp\|avif}`|`GET`| Returns an image with the given format. If the `format` is not matched it returns 404|
 |`/absolute-redirect/{n}`|`GET`| Absolutely 302 Redirects `n` times. `Location` header will be an absolute URL.|
 |`/redirect-to`|`DELETE`<br>`GET`<br>`PATCH`<br>`POST`<br>`PUT`|302/3XX Redirects to the given URL. `url` parameter is required and `status` parameter is optional.|
 |`/redirect/{n}`|`GET`| 302 Redirects n times. `Location` header will be an absolute if `absolute=true` was sent as a query parameter.|
 |`/relative-redirect/{n}`|`GET`| Relatively 302 Redirects n times. `Location` header will be a relative URL.|
-|`/anything`|`DELETE`<br>`GET`<br>`PATCH`<br>`POST`<br>`PUT`|Returns anything passed in request data.|
-|`/anything/{anything}`|`DELETE`<br>`GET`<br>`PATCH`<br>`POST`<br>`PUT`|Returns anything passed in request data.|
+|`/anything`<br><br>`/anything/{anything}`|`DELETE`<br>`GET`<br>`PATCH`<br>`POST`<br>`PUT`|Returns anything passed in request data.|
 
