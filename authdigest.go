@@ -264,8 +264,6 @@ func compileDigestResponse(dig *digestCredentials, password, method, uri string)
 		resp = fmt.Sprintf("%s:%s:%s:%s:%s:%s", ha1Value, dig.nonce, dig.nc, dig.cnonce, dig.qop, ha2Value)
 
 	default:
-		// actually qop must be either `auth` or `auth-int`
-		// TODO: remove support for custom
 		resp = fmt.Sprintf("%s:%s:%s", ha1Value, dig.nonce, ha2Value)
 	}
 
