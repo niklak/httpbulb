@@ -147,7 +147,11 @@ func Test_Http2Client(t *testing.T) {
 </details>
 
 It is also possible to use `httpbulb` as a web-server.
-The binary can be built with from `github.com/niklak/httpbulb/cmd/bulb` or you can use docker image `ghcr.io/niklak/httpbulb:latest`.
+The binary can be built with from `github.com/niklak/httpbulb/cmd/bulb`.
+
+Also you can simply use docker to run a web-server:
+
+ `docker run -p 8080:8080 ghcr.io/niklak/httpbulb:latest`.
 
 <details>
 <summary>Running a web-server using docker-compose</summary>
