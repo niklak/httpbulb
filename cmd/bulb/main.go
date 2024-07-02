@@ -58,7 +58,7 @@ func main() {
 	r := httpbulb.NewRouter(middleware.Logger, middleware.Recoverer)
 
 	r.Get("/", httpbulb.IndexHandle)
-	r.Mount("/static", http.FileServerFS(distFS))
+	r.Mount("/static", http.FileServer(http.FS(distFS)))
 
 	srv := &http.Server{
 		Addr:         cfg.Addr,
