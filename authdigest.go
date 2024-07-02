@@ -279,7 +279,7 @@ func checkDigestAuth(r *http.Request, dig *digestCredentials, username, password
 		return
 	}
 
-	responseHash := compileDigestResponse(dig, password, r.Method, getAbsoluteURL(r))
+	responseHash := compileDigestResponse(dig, password, r.Method, r.RequestURI)
 	expectedHash := dig.response
 	if subtle.ConstantTimeCompare([]byte(responseHash), []byte(expectedHash)) == 1 {
 		ok = true

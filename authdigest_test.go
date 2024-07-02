@@ -68,14 +68,13 @@ func (s *AuthDigestSuite) TestDigestAuth() {
 
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
-			addr := fmt.Sprintf(
-				"%s/digest-auth/%s/%s/%s/%s",
-				s.testServer.URL, tt.qop, username, password, tt.algorithm)
+			uri := fmt.Sprintf("/digest-auth/%s/%s/%s/%s", tt.qop, username, password, tt.algorithm)
+			addr := fmt.Sprintf("%s%s", s.testServer.URL, uri)
 			credentials := map[string]string{
 				"username":  username,
 				"realm":     "httpbulb",
 				"qop":       tt.qop,
-				"uri":       addr,
+				"uri":       uri,
 				"nonce":     "dcd98b7102dd2f0e8b11d0f600bfb0c093",
 				"nc":        "00000001",
 				"cnonce":    "0a4f113b",
@@ -88,7 +87,7 @@ func (s *AuthDigestSuite) TestDigestAuth() {
 
 			dig := (&digestCredentials{}).fromMap(credentials)
 
-			digestResp := compileDigestResponse(dig, password, http.MethodGet, addr)
+			digestResp := compileDigestResponse(dig, password, http.MethodGet, uri)
 
 			credentials["response"] = digestResp
 

@@ -1,0 +1,309 @@
+[
+  {
+    "name": "/delete",
+    "url": "/delete",
+    "methods": ["DELETE"],
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns request basic information."
+  },
+  {
+    "name": "/get",
+    "url": "/get",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns request basic information."
+  },
+  {
+    "name": "/patch",
+    "url": "/patch",
+    "methods": ["PATCH"],
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns request basic information."
+  },
+  {
+    "name": "/post",
+    "url": "/post",
+    "methods": ["POST"],
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns request basic information."
+  },
+  {
+    "name": "/put",
+    "url": "/put",
+    "methods": ["PUT"],
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns request basic information."
+  },
+  {
+    "name": "/basic-auth/{user}/{password}",
+    "url": "/basic-auth/usr/passwd",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Prompts the user for authorization using HTTP Basic Auth. Returns 401 if authorization is failed."
+  },
+  {
+    "name": "/hidden-basic-auth/{user}/{password}",
+    "url": "/hidden-basic-auth/usr/passwd",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Prompts the user for authorization using HTTP Basic Auth. Returns 404 if authorization is failed."
+  },
+  {
+    "name": "/bearer",
+    "url": "/bearer",
+    "params": {
+      "headers": {
+        "Accept": "application/json",
+        "Authorization": "Bearer YOUR_TOKEN"
+      }
+    },
+    "description": "Prompts the user for authorization using bearer authentication. Returns 401 if authorization is failed."
+  },
+
+  {
+    "name": "/digest-auth/{qop}/{user}/{passwd}",
+    "url": "/digest-auth/auth/usr/passwd",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Prompts the user for authorization using HTTP Digest Auth. Returns 401 if authorization is failed. MD5 used as the default algorithm. You can specify any of the following algorithms: MD5, SHA-256, SHA-512."
+  },
+  {
+    "name": "/digest-auth/{qop}/{user}/{passwd}/{algorithm}",
+    "url": "/digest-auth/auth/usr/passwd/SHA-256",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Prompts the user for authorization using HTTP Digest Auth. Returns 401 if authorization is failed."
+  },
+  {
+    "name": "/digest-auth/{qop}/{user}/{passwd}/{algorithm}/{stale_after}",
+    "url": "/digest-auth/auth/usr/passwd/MD5/10",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Prompts the user for authorization using HTTP Digest Auth. Returns 401 if authorization is failed."
+  },
+  {
+    "name": "/status/{codes}",
+    "url": "/status/200,400,403,501",
+    "methods": ["GET", "DELETE", "PATCH", "POST", "PUT"],
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns status code or random status code if more than one are given. This handler does not handle status codes lesser than 200 or greater than 599."
+  },
+  {
+    "name": "/headers",
+    "url": "/headers",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Return the incoming request's HTTP headers."
+  },
+  {
+    "name": "/ip",
+    "url": "/ip",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns the IP address of the client."
+  },
+  {
+    "name": "/user-agent",
+    "url": "/user-agent",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Return the incoming requests's User-Agent header."
+  },
+  {
+    "name": "/cache",
+    "url": "/cache",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns a 304 if an If-Modified-Since header or If-None-Match is present. Returns the same as a `/get` otherwise."
+  },
+  {
+    "name": "cache/{seconds}",
+    "url": "/cache/60",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Sets a Cache-Control header for n seconds."
+  },
+  {
+    "name": "/etag/{etag}",
+    "url": "/etag/e7f3c0a5-1d8b-4e9e-af6e-2e35cde33671",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Assumes the resource has the given etag and responds to If-None-Match and If-Match headers appropriately."
+  },
+  {
+    "name": "/response-headers",
+    "url": "/response-headers",
+    "methods": ["GET", "POST"],
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns a set of response headers from the query string."
+  },
+  {
+    "name": "/brotli",
+    "url": "/brotli",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns Brotli-encoded data."
+  },
+  {
+    "name": "/deflate",
+    "url": "/deflate",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns Deflate-encoded data."
+  },
+  {
+    "name": "/gzip",
+    "url": "/gzip",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns Gzip-encoded data."
+  },
+  {
+    "name": "/deny",
+    "url": "/deny",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns page denied by robots.txt rules."
+  },
+  {
+    "name": "/encoding/utf8",
+    "url": "/encoding/utf8",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns a UTF-8 encoded body."
+  },
+  {
+    "name": "/html",
+    "url": "/html",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns a simple HTML document."
+  },
+  {
+    "name": "/json",
+    "url": "/json",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns a JSON object."
+  },
+  {
+    "name": "/robots.txt",
+    "url": "/robots.txt",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns some robots.txt rules."
+  },
+  {
+    "name": "/xml",
+    "url": "/xml",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns a simple XML document."
+  },
+  {
+    "name": "/base64/{value}",
+    "url": "/base64/YmFzZTY0LWRlY29kZSB0ZXN0Cg==",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Decodes base64url-encoded string."
+  },
+  {
+    "name": "/bytes/{n}",
+    "url": "/bytes/512",
+    "description": "Returns n random bytes generated with given seed."
+  },
+  {
+    "name": "/delay/{seconds}",
+    "url": "/delay/2",
+    "methods": ["GET", "DELETE", "PATCH", "POST", "PUT"],
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns a delayed response (max of 10 seconds)."
+  },
+  {
+    "name": "/drip",
+    "url": "/drip?code=200&delay=2&duration=2&numbytes=10",
+    "description": "Drips data over a duration after an optional initial delay."
+  },
+  {
+    "name": "/links/{n}/{offset}",
+    "url": "/links/5/3",
+    "description": "Generates a page containing n links to other pages which do the same."
+  },
+  {
+    "name": "/range/{numbytes}",
+    "url": "/range/1024",
+    "description": "Streams n random bytes generated with given seed, at given chunk size per packet. Supports Accept-Ranges and Content-Range headers."
+  },
+  {
+    "name": "/stream-bytes/{n}",
+    "url": "/stream-bytes/1024?chunk_size=512",
+    "description": "Streams n random bytes generated with given seed, at given chunk size per packet."
+  },
+  {
+    "name": "/stream/{n}",
+    "url": "/stream/3",
+    "description": "Streams n json messages."
+  },
+  {
+    "name": "/uuid",
+    "url": "/uuid",
+    "description": "Returns a UUID4."
+  },
+  {
+    "name": "/cookies",
+    "url": "/cookies",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns cookie data."
+  },
+  {
+    "name": "/cookies-list",
+    "url": "/cookies-list",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns a cookie list (`[]http.Cookie`) in the same order as it was received and parsed on the server."
+  },
+  {
+    "name": "/cookies/delete",
+    "url": "/cookies/delete",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Deletes cookie(s) as provided by the query string and redirects to cookie list."
+  },
+  {
+    "name": "/cookies/set",
+    "url": "/cookies/set?key1=value1&key2=value2",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Sets cookie(s) as provided by the query string and redirects to `/cookies`."
+  },
+  {
+    "name": "/cookies/set/{name}/{value}",
+    "url": "/cookies/set/key1/value1",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Sets a cookie and redirects to `/cookies`."
+  },
+  {
+    "name": "/image",
+    "url": "/image",
+    "params": { "headers": { "Accept": "image/avif" } },
+    "description": "Returns a simple image of the type suggest by the Accept header. Also supports a `Range` requests"
+  },
+  {
+    "name": "/image/{format:svg|png|jpeg|webp|avif}",
+    "url": "/image/png",
+    "description": "Returns an image with the given format. If the format is not matched it returns 404"
+  },
+  {
+    "name": "/absolute-redirect/{n}",
+    "url": "/absolute-redirect/3",
+    "description": "Absolutely 302 Redirects n times. Location header will be an absolute URL."
+  },
+  {
+    "name": "/redirect-to",
+    "url": "/redirect-to?status=301&url=%2Fanything",
+    "methods": ["GET", "DELETE", "PATCH", "POST", "PUT"],
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "302/3XX Redirects to the given URL. url parameter is required and status parameter is optional."
+  },
+  {
+    "name": "/redirect/{n}",
+    "url": "/redirect/3?absolute=true",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "302 Redirects n times. Location header will be an absolute if absolute=true was sent as a query parameter."
+  },
+  {
+    "name": "/relative-redirect/{n}",
+    "url": "/relative-redirect/3",
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Relatively 302 Redirects n times. Location header will be a relative URL."
+  },
+  {
+    "name": "/anything",
+    "url": "/anything",
+    "methods": ["GET", "DELETE", "PATCH", "POST", "PUT"],
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns anything passed in request data."
+  },
+  {
+    "name": "/anything/{anything}",
+    "url": "/anything/thing",
+    "methods": ["GET", "DELETE", "PATCH", "POST", "PUT"],
+    "params": { "headers": { "Accept": "application/json" } },
+    "description": "Returns anything passed in request data."
+  }
+]

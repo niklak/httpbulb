@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"embed"
 	"errors"
 	"log"
 	"net/http"
@@ -17,6 +18,9 @@ import (
 )
 
 const logPrefix string = "BULB SERVER"
+
+//go:embed static
+var distFS embed.FS
 
 type config struct {
 	Host         string        `env:"HOST"`
@@ -54,7 +58,7 @@ func main() {
 	r := httpbulb.NewRouter(middleware.Logger, middleware.Recoverer)
 
 	r.Get("/", httpbulb.IndexHandle)
-	r.Get("/style.css", httpbulb.StyleHandle)
+	r.Mount("/static", http.FileServerFS(distFS))
 
 	srv := &http.Server{
 		Addr:         cfg.Addr,
