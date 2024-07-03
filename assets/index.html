@@ -99,7 +99,7 @@
             text = await resp.text();
           } else {
             const t = await resp.text();
-            text = `<pre class="max-w-xs">${t}</pre>`;
+            text = `<pre class="min-w-0">${t}</pre>`;
           }
           return {
             headers: headers,
@@ -216,20 +216,20 @@
                 </div>
 
                 <div class="flex">
-                  <div class="basis-1/2">
+                  <div class="basis-1/2 min-w-0">
                     <div class="mr-1">
                       <h4 class="font-bold mb-1">response body:</h4>
                       <div
                         x-html="resp.text"
-                        class="text-xs h-96 overflow-scroll border border-blue-300 rounded p-1 relative"
+                        class="text-xs h-96 overflow-scroll border border-blue-300 rounded p-1"
                       ></div>
                     </div>
                   </div>
-                  <div class="basis-1/2">
+                  <div class="basis-1/2 min-w-0">
                     <div class="ml-1">
                       <h4 class="font-bold mb-1">response headers:</h4>
                       <div class="text-xs h-96 overflow-scroll border-blue-300 border rounded p-1">
-                        <pre class="max-w-xs" x-text="resp.headers"></pre>
+                        <pre class="min-w-0" x-text="resp.headers"></pre>
                       </div>
                     </div>
                   </div>
