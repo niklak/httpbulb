@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/niklak/httpbulb)](https://goreportcard.com/report/github.com/niklak/httpbulb)
 [![codecov](https://codecov.io/gh/niklak/httpbulb/graph/badge.svg?token=8GI1ZDHIH8)](https://codecov.io/gh/niklak/httpbulb)
 
-[![Edit niklak/httpbulb/main](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/p/github/niklak/httpbulb/main?embed=1)
+
 
 A tool for testing http client capabilities.
 
@@ -37,7 +37,7 @@ go get -u github.com/niklak/httpbulb
 
 ## Examples
 
-The main approach is to use `httpbulb` with `httptest.Server`.
+**The main approach is to use `httpbulb` with `httptest.Server`.**
 
 <details>
 
@@ -146,8 +146,10 @@ func Test_Http2Client(t *testing.T) {
 
 </details>
 
-It is also possible to use `httpbulb` as a web-server.
+**It is also possible to use `httpbulb` as a web-server.**
+
 The binary can be built with from `github.com/niklak/httpbulb/cmd/bulb`.
+
 
 Also you can simply use docker to run a web-server:
 
@@ -202,6 +204,11 @@ curl -v https://example.com:4443/get
 ```
 
 </details>
+
+### Live example
+Live example is available at *codesandbox*:
+
+[![Edit niklak/httpbulb/main](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/p/github/niklak/httpbulb/main?embed=1)
 
 
 ## Endpoints
