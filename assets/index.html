@@ -24,6 +24,8 @@
     <script>
       "use strict";
 
+      const baseURL = window.location.origin;
+
       function getContentType(params) {
         if (params.headers == null) {
           return "";
@@ -60,7 +62,7 @@
           }
           this.currentMethod = methods[0];
           this.name = name;
-          this.url = url;
+          this.url = new URL(url, baseURL).href;
           this.description = description;
           this.methods = methods;
           this.params = params;
@@ -159,7 +161,7 @@
                 @click="toggle()"
                 class="bg-blue-100 border border-blue-300 rounded p-2 font-bold"
               >
-                <div class="flex flex-nowrap flex-row cursor-pointer">
+                <div class="flex flex-nowrap flex-row cursor-pointer items-center">
                   <div
                     x-text="req.currentMethod"
                     class="bg-blue-500 text-white border-2 border-blue-500 font-bold w-20 text-center mr-2 rounded"
@@ -169,12 +171,12 @@
                 </div>
               </div>
 
-              <div x-show="open" class="m-2">
+              <div x-show="open" class="m-2 text-xs sm:text-sm md:text-base lg:text-lg">
                 <div class="flex flex-col lg:flex-row">
                   <div class="basis-1/2 mb-2 lg:m-0">
                     <button
                       @click="await doRequest()"
-                      class="bg-white border-2 border-slate-800 hover:text-black hover:border-black text-slate-800 font-bold p-2 rounded"
+                      class="bg-white border-2 border-slate-800 hover:text-black hover:border-black text-slate-800 font-bold py-1 lg:py-2 rounded w-20"
                     >
                       execute
                     </button>
@@ -217,18 +219,18 @@
 
                 <div class="flex flex-col lg:flex-row">
                   <div class="lg:basis-1/2 min-w-0">
-                    <div class="mr-1">
+                    <div class="lg:mr-1">
                       <h4 class="font-bold mb-1">response body:</h4>
                       <div
                         x-html="resp.text"
-                        class="text-xs h-96 overflow-scroll border border-blue-300 rounded p-1"
+                        class="text-xs lg:text-sm h-96 overflow-scroll border border-blue-300 rounded p-1"
                       ></div>
                     </div>
                   </div>
                   <div class="lg:basis-1/2 min-w-0">
                     <div class="lg:ml-1">
                       <h4 class="font-bold mb-1">response headers:</h4>
-                      <div class="text-xs h-24 lg:h-96 overflow-scroll border-blue-300 border rounded p-1">
+                      <div class="text-xs lg:text-sm h-24 lg:h-96 overflow-scroll border-blue-300 border rounded p-1">
                         <pre class="min-w-0" x-text="resp.headers"></pre>
                       </div>
                     </div>
