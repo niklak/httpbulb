@@ -165,13 +165,13 @@
                     class="bg-blue-500 text-white border-2 border-blue-500 font-bold w-20 text-center mr-2 rounded"
                     class="flex"
                   ></div>
-                  <div x-text="req.name" class="text-lg" class="flex"></div>
+                  <div x-text="req.name" class="text-xs sm:text-sm md:text-base lg:text-lg"></div>
                 </div>
               </div>
 
               <div x-show="open" class="m-2">
-                <div class="flex flex-row">
-                  <div class="basis-1/2">
+                <div class="flex flex-col lg:flex-row">
+                  <div class="basis-1/2 mb-2 lg:m-0">
                     <button
                       @click="await doRequest()"
                       class="bg-white border-2 border-slate-800 hover:text-black hover:border-black text-slate-800 font-bold p-2 rounded"
@@ -179,7 +179,7 @@
                       execute
                     </button>
                   </div>
-                  <div class="flex flex-row gap-2 ml-1">
+                  <div class="flex flex-row gap-1 lg:gap-2 lg:ml-1">
                     <template x-for="method in req.methods">
                       <div class="flex-initial">
                         <button
@@ -192,7 +192,7 @@
                   </div>
                 </div>
 
-                <div class="flex flex-row justify-between my-2">
+                <div class="flex flex-col lg:flex-row lg:justify-between my-2">
                   <div class="flex flex-col basis-1/2">
                     <div>
                       <span class="font-bold">request url:</span>
@@ -207,16 +207,16 @@
                       <code class="pl-1" x-text="resp.status"></code>
                     </div>
                   </div>
-                  <div class="basis-1/2">
-                    <div class="ml-1">
+                  <div class="lg:basis-1/2">
+                    <div class="lg:ml-1">
                       <div class="font-bold">description:</div>
                     <div class="pl-2" x-text="req.description"></div>
                     </div>
                   </div>
                 </div>
 
-                <div class="flex">
-                  <div class="basis-1/2 min-w-0">
+                <div class="flex flex-col lg:flex-row">
+                  <div class="lg:basis-1/2 min-w-0">
                     <div class="mr-1">
                       <h4 class="font-bold mb-1">response body:</h4>
                       <div
@@ -225,10 +225,10 @@
                       ></div>
                     </div>
                   </div>
-                  <div class="basis-1/2 min-w-0">
-                    <div class="ml-1">
+                  <div class="lg:basis-1/2 min-w-0">
+                    <div class="lg:ml-1">
                       <h4 class="font-bold mb-1">response headers:</h4>
-                      <div class="text-xs h-96 overflow-scroll border-blue-300 border rounded p-1">
+                      <div class="text-xs h-24 lg:h-96 overflow-scroll border-blue-300 border rounded p-1">
                         <pre class="min-w-0" x-text="resp.headers"></pre>
                       </div>
                     </div>
