@@ -6,7 +6,7 @@
 
 
 
-A tool for testing http client capabilities.
+HTTP Request & Response Testing Tool & Service.
 
 An implementation of `httpbin` for `Go`.
 
