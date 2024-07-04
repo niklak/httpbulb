@@ -161,10 +161,10 @@
                 @click="toggle()"
                 class="bg-blue-100 border border-blue-300 rounded p-2 font-bold"
               >
-                <div class="flex flex-nowrap flex-row cursor-pointer items-center">
+                <div class="flex flex-row cursor-pointer items-center">
                   <div
                     x-text="req.currentMethod"
-                    class="bg-blue-500 text-white border-2 border-blue-500 font-bold w-20 text-center mr-2 rounded"
+                    class="bg-blue-500 text-white border-2 border-blue-500 font-bold min-w-16 w-16 lg:w-20 text-center mr-2 rounded text-sm lg:text-base"
                     class="flex"
                   ></div>
                   <div x-text="req.name" class="text-xs sm:text-sm md:text-base lg:text-lg"></div>
@@ -176,7 +176,7 @@
                   <div class="basis-1/2 mb-2 lg:m-0">
                     <button
                       @click="await doRequest()"
-                      class="bg-white border-2 border-slate-800 hover:text-black hover:border-black text-slate-800 font-bold py-1 lg:py-2 rounded w-20"
+                      class="bg-white border-2 border-slate-800 hover:text-black hover:border-black text-slate-800 font-bold py-1 lg:py-2 rounded min-w-16 w-16 lg:w-20"
                     >
                       execute
                     </button>
