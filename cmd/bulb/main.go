@@ -55,7 +55,7 @@ func main() {
 
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
-	r := httpbulb.NewRouter(middleware.Logger, middleware.Recoverer)
+	r := httpbulb.NewRouter(middleware.Logger, middleware.Recoverer, httpbulb.Cors)
 
 	r.Get("/", httpbulb.IndexHandle)
 	r.Mount("/static", http.FileServer(http.FS(distFS)))
