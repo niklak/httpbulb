@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 var httpClient *http.Client
@@ -26,20 +27,36 @@ func init() {
 	}
 }
 
-func Test_Get(t *testing.T) {
+type MethodsSuite struct {
+	suite.Suite
+	testServer *httptest.Server
+	client     *http.Client
+}
 
+func (s *MethodsSuite) SetupSuite() {
+
+	handleFunc := NewRouter()
+	s.testServer = httptest.NewUnstartedServer(handleFunc)
+	s.testServer.EnableHTTP2 = true
+	s.testServer.StartTLS()
+
+	s.client = s.testServer.Client()
+	s.client.Timeout = 10 * time.Second
+}
+
+func (s *MethodsSuite) TearDownSuite() {
+	s.testServer.Close()
+}
+
+func (s *MethodsSuite) TestGet() {
 	type serverResponse struct {
 		URL     string      `json:"url"`
 		Args    url.Values  `json:"args"`
 		Headers http.Header `json:"headers"`
 	}
 
-	handleFunc := NewRouter()
-	testServer := httptest.NewServer(handleFunc)
-
-	defer testServer.Close()
-
-	apiURL, err := url.Parse(testServer.URL)
+	t := s.T()
+	apiURL, err := url.Parse(s.testServer.URL)
 	require.NoError(t, err)
 	apiURL.Path = "/get"
 	apiURL.RawQuery = "k=v"
@@ -47,32 +64,28 @@ func Test_Get(t *testing.T) {
 	req, err := http.NewRequest("GET", apiURL.String(), nil)
 	require.NoError(t, err)
 
-	resp, err := httpClient.Do(req)
+	resp, err := s.client.Do(req)
 	require.NoError(t, err)
 
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
 	defer resp.Body.Close()
-
 	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	result := new(serverResponse)
 
 	err = json.Unmarshal(body, result)
-
 	require.NoError(t, err)
 
 	require.Equal(t, apiURL.String(), result.URL)
 
 	expectedArgs := url.Values{"k": []string{"v"}}
-
 	require.Equal(t, expectedArgs, result.Args)
 
 	require.Equal(t, apiURL.Host, result.Headers.Get("Host"))
+
 }
-
-func Test_Http2Client(t *testing.T) {
-
+func (s *MethodsSuite) TestHttp2Client() {
 	type testArgs struct {
 		name          string
 		client        *http.Client
@@ -85,16 +98,9 @@ func Test_Http2Client(t *testing.T) {
 		Proto string `json:"proto"`
 	}
 
-	handleFunc := NewRouter()
-	testServer := httptest.NewUnstartedServer(handleFunc)
+	testUrl := fmt.Sprintf("%s/get", s.testServer.URL)
 
-	testServer.EnableHTTP2 = true
-	testServer.StartTLS()
-	defer testServer.Close()
-
-	testUrl := fmt.Sprintf("%s/get", testServer.URL)
-
-	h2Client := testServer.Client()
+	h2Client := s.testServer.Client()
 
 	h1Client := &http.Client{}
 
@@ -107,13 +113,6 @@ func Test_Http2Client(t *testing.T) {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, ForceAttemptHTTP2: true},
 	}
 
-	/*tlsConfig := h2Client.Transport.(*http.Transport).TLSClientConfig
-	forcedH2Client := &http.Client{
-		Transport: &http.Transport{
-			// without ForceAttemptHTTP2 this tlsConfig will fail
-			TLSClientConfig: tlsConfig, ForceAttemptHTTP2: true},
-	}*/
-
 	tests := []testArgs{
 		{name: "Forced secure HTTP/2.0", client: h2Client, wantProto: "HTTP/2.0"},
 		{name: "Forced insecure HTTP/2.0", client: forcedH2Client, wantProto: "HTTP/2.0"},
@@ -122,7 +121,7 @@ func Test_Http2Client(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		s.T().Run(tt.name, func(t *testing.T) {
 			req, err := http.NewRequest("GET", testUrl, nil)
 			require.NoError(t, err)
 			resp, err := tt.client.Do(req)
@@ -150,112 +149,163 @@ func Test_Http2Client(t *testing.T) {
 	}
 }
 
-func Test_MethodNotAllowed(t *testing.T) {
+func (s *MethodsSuite) TestMethodsInternalError() {
 
-	handleFunc := NewRouter()
-	testServer := httptest.NewServer(handleFunc)
+	type testArgs struct {
+		name        string
+		apiURL      string
+		method      string
+		contentType string
+		body        []byte
+	}
 
-	defer testServer.Close()
+	tests := []testArgs{
+		{
+			name:        "bad form",
+			apiURL:      fmt.Sprintf("%s/post", s.testServer.URL),
+			method:      http.MethodPost,
+			contentType: "application/x-www-form-urlencoded",
+			body:        []byte("%"),
+		},
+		{
+			name:        "bad multipart form",
+			apiURL:      fmt.Sprintf("%s/post", s.testServer.URL),
+			method:      http.MethodPost,
+			contentType: "multipart/form-data",
+			body:        []byte("%"),
+		},
+		{
+			name:        "bad json",
+			apiURL:      fmt.Sprintf("%s/post", s.testServer.URL),
+			method:      http.MethodPost,
+			contentType: "application/json",
+			body:        []byte("%"),
+		},
+	}
 
-	testUrl := fmt.Sprintf("%s/get?k=v", testServer.URL)
+	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
 
-	req, err := http.NewRequest("POST", testUrl, nil)
-	require.NoError(t, err)
+			req, err := http.NewRequest(tt.method, tt.apiURL, bytes.NewReader(tt.body))
+			require.NoError(t, err)
+			req.Header.Set("Content-Type", tt.contentType)
 
-	resp, err := httpClient.Do(req)
-	require.NoError(t, err)
+			resp, err := s.client.Do(req)
+			require.NoError(t, err)
 
-	require.Equal(t, http.StatusMethodNotAllowed, resp.StatusCode)
+			require.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+			io.Copy(io.Discard, resp.Body)
+			resp.Body.Close()
+		})
+	}
 }
 
-func Test_Form(t *testing.T) {
+func (s *MethodsSuite) TestMethodNotAllowed() {
+
+	testUrl := fmt.Sprintf("%s/get?k=v", s.testServer.URL)
+
+	req, err := http.NewRequest("POST", testUrl, nil)
+	require.NoError(s.T(), err)
+
+	resp, err := s.client.Do(req)
+	require.NoError(s.T(), err)
+
+	require.Equal(s.T(), http.StatusMethodNotAllowed, resp.StatusCode)
+}
+
+func (s *MethodsSuite) TestForm() {
 
 	type serverResponse struct {
 		URL  string     `json:"url"`
 		Form url.Values `json:"form"`
 	}
 
-	handleFunc := NewRouter()
-	// Start a test server that will act as a proxy
-	testServer := httptest.NewServer(handleFunc)
+	type testArgs struct {
+		method string
+	}
 
-	defer testServer.Close()
+	tests := []testArgs{
+		{"post"}, {"put"}, {"patch"},
+	}
 
-	methods := []string{"post", "put", "patch"}
+	for _, tt := range tests {
+		s.T().Run(tt.method, func(t *testing.T) {
+			testURL := fmt.Sprintf("%s/%s", s.testServer.URL, tt.method)
 
-	for _, method := range methods {
-		testURL := fmt.Sprintf("%s/%s", testServer.URL, method)
+			req, err := http.NewRequest(strings.ToUpper(tt.method), testURL, strings.NewReader("k=v"))
+			require.NoError(t, err)
 
-		req, err := http.NewRequest(strings.ToUpper(method), testURL, strings.NewReader("k=v"))
-		require.NoError(t, err)
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			resp, err := s.client.Do(req)
+			require.NoError(t, err)
+			defer resp.Body.Close()
 
-		resp, err := httpClient.Do(req)
-		require.NoError(t, err)
-		defer resp.Body.Close()
+			body, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
+			// in this case we require either a result or a response
+			result := new(serverResponse)
 
-		body, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-		// in this case we require either a result or a response
-		result := new(serverResponse)
+			json.Unmarshal(body, result)
+			// ensure that result has the expected value
+			require.Equal(t, testURL, result.URL)
 
-		json.Unmarshal(body, result)
-		// ensure that result has the expected value
-		require.Equal(t, testURL, result.URL)
+			expectedForm := url.Values{"k": []string{"v"}}
 
-		expectedForm := url.Values{"k": []string{"v"}}
+			require.Equal(t, expectedForm, result.Form)
+		})
 
-		require.Equal(t, expectedForm, result.Form)
 	}
 
 }
 
-func Test_JSON(t *testing.T) {
+func (s *MethodsSuite) TestJSON() {
 	type serverResponse struct {
 		URL  string            `json:"url"`
 		JSON map[string]string `json:"json"`
 	}
 
-	handleFunc := NewRouter()
-	testServer := httptest.NewServer(handleFunc)
+	type testArgs struct {
+		method string
+	}
 
-	defer testServer.Close()
+	tests := []testArgs{{"post"}, {"put"}, {"patch"}}
 
-	methods := []string{"post", "put", "patch"}
+	for _, tt := range tests {
+		s.T().Run(tt.method, func(t *testing.T) {
+			testURL := fmt.Sprintf("%s/%s", s.testServer.URL, tt.method)
 
-	for _, method := range methods {
-		testURL := fmt.Sprintf("%s/%s", testServer.URL, method)
+			req, err := http.NewRequest(
+				strings.ToUpper(tt.method),
+				testURL,
+				strings.NewReader(`{"k":"v"}`),
+			)
+			require.NoError(t, err)
 
-		req, err := http.NewRequest(
-			strings.ToUpper(method),
-			testURL,
-			strings.NewReader(`{"k":"v"}`),
-		)
-		require.NoError(t, err)
+			req.Header.Set("Content-Type", "application/json")
 
-		req.Header.Set("Content-Type", "application/json")
+			resp, err := s.client.Do(req)
+			require.NoError(t, err)
+			defer resp.Body.Close()
 
-		resp, err := httpClient.Do(req)
-		require.NoError(t, err)
-		defer resp.Body.Close()
+			body, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
+			// in this case we require either a result or a response
+			result := new(serverResponse)
 
-		body, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-		// in this case we require either a result or a response
-		result := new(serverResponse)
+			json.Unmarshal(body, result)
+			// ensure that result has the expected value
+			require.Equal(t, testURL, result.URL)
 
-		json.Unmarshal(body, result)
-		// ensure that result has the expected value
-		require.Equal(t, testURL, result.URL)
+			expectedJSON := map[string]string{"k": "v"}
 
-		expectedJSON := map[string]string{"k": "v"}
+			require.Equal(t, expectedJSON, result.JSON)
+		})
 
-		require.Equal(t, expectedJSON, result.JSON)
 	}
 }
 
-func Test_PostMultipart(t *testing.T) {
+func (s *MethodsSuite) TestPostMultipart() {
 
 	type serverResponse struct {
 		URL   string              `json:"url"`
@@ -263,12 +313,9 @@ func Test_PostMultipart(t *testing.T) {
 		Files map[string][]string `json:"files"`
 	}
 
-	handleFunc := NewRouter()
-	testServer := httptest.NewServer(handleFunc)
+	testURL := fmt.Sprintf("%s/post", s.testServer.URL)
 
-	defer testServer.Close()
-
-	testURL := fmt.Sprintf("%s/post", testServer.URL)
+	t := s.T()
 
 	buf := new(bytes.Buffer)
 	w := multipart.NewWriter(buf)
@@ -285,7 +332,7 @@ func Test_PostMultipart(t *testing.T) {
 
 	req.Header.Set("Content-Type", w.FormDataContentType())
 
-	resp, err := httpClient.Do(req)
+	resp, err := s.client.Do(req)
 	require.NoError(t, err)
 
 	defer resp.Body.Close()
@@ -310,24 +357,21 @@ func Test_PostMultipart(t *testing.T) {
 
 }
 
-func Test_Delete(t *testing.T) {
+func (s *MethodsSuite) TestDelete() {
 
 	type serverResponse struct {
 		URL  string     `json:"url"`
 		Args url.Values `json:"args"`
 	}
 
-	handleFunc := NewRouter()
-	testServer := httptest.NewServer(handleFunc)
+	t := s.T()
 
-	defer testServer.Close()
-
-	testUrl := fmt.Sprintf("%s/delete?id=1", testServer.URL)
+	testUrl := fmt.Sprintf("%s/delete?id=1", s.testServer.URL)
 
 	req, err := http.NewRequest("DELETE", testUrl, nil)
 	require.NoError(t, err)
 
-	resp, err := httpClient.Do(req)
+	resp, err := s.client.Do(req)
 	require.NoError(t, err)
 
 	defer resp.Body.Close()
@@ -341,108 +385,43 @@ func Test_Delete(t *testing.T) {
 	require.Equal(t, expectedArgs, result.Args)
 }
 
-func Test_Anything(t *testing.T) {
+func (s *MethodsSuite) TestAnything() {
 
 	type serverResponse struct {
 		URL string `json:"url"`
 	}
-
-	handleFunc := NewRouter()
-	testServer := httptest.NewServer(handleFunc)
-
-	defer testServer.Close()
-
-	testUrl := fmt.Sprintf("%s/anything?k=v", testServer.URL)
-
-	req, err := http.NewRequest("GET", testUrl, nil)
-	require.NoError(t, err)
-
-	resp, err := httpClient.Do(req)
-	require.NoError(t, err)
-
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-	result := new(serverResponse)
-	json.Unmarshal(body, result)
-
-	require.Equal(t, testUrl, result.URL)
-}
-
-func Test_AnythingAnything(t *testing.T) {
-	type serverResponse struct {
-		URL string `json:"url"`
-	}
-
-	handleFunc := NewRouter()
-	testServer := httptest.NewServer(handleFunc)
-
-	defer testServer.Close()
-
-	testUrl := fmt.Sprintf("%s/anything/something?k=v", testServer.URL)
-
-	req, err := http.NewRequest("GET", testUrl, nil)
-	require.NoError(t, err)
-
-	resp, err := httpClient.Do(req)
-	require.NoError(t, err)
-
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-	result := new(serverResponse)
-	json.Unmarshal(body, result)
-	require.Equal(t, testUrl, result.URL)
-}
-
-func TestMethodsInternalError(t *testing.T) {
 
 	type testArgs struct {
-		name        string
-		apiURL      string
-		method      string
-		contentType string
-		body        []byte
+		name string
+		url  string
 	}
 
-	testServer := httptest.NewServer(NewRouter())
-	defer testServer.Close()
-
 	tests := []testArgs{
-		{
-			name:        "bad form",
-			apiURL:      fmt.Sprintf("%s/post", testServer.URL),
-			method:      http.MethodPost,
-			contentType: "application/x-www-form-urlencoded",
-			body:        []byte("%"),
-		},
-		{
-			name:        "bad multipart form",
-			apiURL:      fmt.Sprintf("%s/post", testServer.URL),
-			method:      http.MethodPost,
-			contentType: "multipart/form-data",
-			body:        []byte("%"),
-		},
-		{
-			name:        "bad json",
-			apiURL:      fmt.Sprintf("%s/post", testServer.URL),
-			method:      http.MethodPost,
-			contentType: "application/json",
-			body:        []byte("%"),
-		},
+		{name: "anything", url: fmt.Sprintf("%s/anything?k=v", s.testServer.URL)},
+		{name: "anything path", url: fmt.Sprintf("%s/anything/something?k=v", s.testServer.URL)},
 	}
 
 	for _, tt := range tests {
-		req, err := http.NewRequest(tt.method, tt.apiURL, bytes.NewReader(tt.body))
-		require.NoError(t, err)
+		s.T().Run(tt.name, func(t *testing.T) {
 
-		req.Header.Set("Content-Type", tt.contentType)
+			req, err := http.NewRequest("GET", tt.url, nil)
+			require.NoError(t, err)
 
-		resp, err := httpClient.Do(req)
-		require.NoError(t, err)
+			resp, err := s.client.Do(req)
+			require.NoError(t, err)
 
-		require.Equal(t, http.StatusInternalServerError, resp.StatusCode)
-		io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
+			defer resp.Body.Close()
+
+			body, _ := io.ReadAll(resp.Body)
+			result := new(serverResponse)
+			json.Unmarshal(body, result)
+
+			require.Equal(t, tt.url, result.URL)
+		})
 	}
+
+}
+
+func TestMethodsSuite(t *testing.T) {
+	suite.Run(t, new(MethodsSuite))
 }

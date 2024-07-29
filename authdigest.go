@@ -210,8 +210,8 @@ func writeDigestChallengeResponse(w http.ResponseWriter, r *http.Request, realm,
 	nonceBuf.WriteString(":")
 	nonceBuf.Write(b)
 
-	nonce := hash(nonceBuf.Bytes(), algorithm)
-	opaque := hash(opaqueB, algorithm)
+	nonce := hexDigest(nonceBuf.Bytes(), algorithm)
+	opaque := hexDigest(opaqueB, algorithm)
 
 	if qop == "" {
 		qop = "auth"
@@ -225,7 +225,7 @@ func writeDigestChallengeResponse(w http.ResponseWriter, r *http.Request, realm,
 
 }
 
-func hash(data []byte, algorithm string) string {
+func hexDigest(data []byte, algorithm string) string {
 	var h []byte
 
 	switch algorithm {
@@ -245,12 +245,12 @@ func hash(data []byte, algorithm string) string {
 
 func ha1(realm, username, password, algorithm string) string {
 	a1 := []byte(fmt.Sprintf("%s:%s:%s", username, realm, password))
-	return hash(a1, algorithm)
+	return hexDigest(a1, algorithm)
 }
 
 func ha2(method, uri, algorithm string) string {
 	a2 := []byte(fmt.Sprintf("%s:%s", method, uri))
-	return hash(a2, algorithm)
+	return hexDigest(a2, algorithm)
 }
 
 func compileDigestResponse(dig *digestCredentials, password, method, uri string) string {
@@ -267,7 +267,7 @@ func compileDigestResponse(dig *digestCredentials, password, method, uri string)
 		resp = fmt.Sprintf("%s:%s:%s", ha1Value, dig.nonce, ha2Value)
 	}
 
-	return hash([]byte(resp), dig.algorithm)
+	return hexDigest([]byte(resp), dig.algorithm)
 }
 
 func checkDigestAuth(r *http.Request, dig *digestCredentials, username, password string) (ok bool) {
@@ -279,9 +279,9 @@ func checkDigestAuth(r *http.Request, dig *digestCredentials, username, password
 		return
 	}
 
-	responseHash := compileDigestResponse(dig, password, r.Method, r.RequestURI)
-	expectedHash := dig.response
-	if subtle.ConstantTimeCompare([]byte(responseHash), []byte(expectedHash)) == 1 {
+	responseHexDigest := compileDigestResponse(dig, password, r.Method, r.RequestURI)
+	expectedHexDigest := dig.response
+	if subtle.ConstantTimeCompare([]byte(responseHexDigest), []byte(expectedHexDigest)) == 1 {
 		ok = true
 	}
 	return
