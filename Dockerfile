@@ -12,13 +12,10 @@ RUN go build -o ${APP_NAME}
 
 FROM golang:1.22-bookworm
 
-
 RUN useradd -s /bin/bash httpbulb
 
-ENV APP_NAME=bulb_server
-
-COPY --chown=httpbulb:httpbulb --from=build /httpbulb/cmd/bulb/${APP_NAME} /usr/local/bin/${APP_NAME}
+COPY --chown=httpbulb:httpbulb --from=build /httpbulb/cmd/bulb/bulb_server /usr/local/bin/bulb_server
 
 USER httpbulb
 
-ENTRYPOINT ${APP_NAME}
+CMD ["bulb_server"]
