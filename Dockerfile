@@ -1,4 +1,4 @@
-FROM golang:1.22-bookworm as build
+FROM golang:1.23-bookworm as build
 
 
 ENV APP_ROOT=/httpbulb
@@ -10,7 +10,7 @@ WORKDIR ${APP_ROOT}/cmd/bulb
 RUN go build -o ${APP_NAME}
 
 
-FROM golang:1.22-bookworm
+FROM golang:1.23-bookworm
 
 RUN useradd -s /bin/bash httpbulb
 
