@@ -1,4 +1,4 @@
-FROM golang:1.23-bookworm as build
+FROM golang:1.23-alpine as build
 
 
 ENV APP_ROOT=/httpbulb
@@ -10,9 +10,12 @@ WORKDIR ${APP_ROOT}/cmd/bulb
 RUN go build -o ${APP_NAME}
 
 
-FROM golang:1.23-bookworm
+FROM alpine:3.20
 
-RUN useradd -s /bin/bash httpbulb
+RUN apk add --no-cache \
+	ca-certificates 
+
+RUN adduser -D httpbulb
 
 COPY --chown=httpbulb:httpbulb --from=build /httpbulb/cmd/bulb/bulb_server /usr/local/bin/bulb_server
 
