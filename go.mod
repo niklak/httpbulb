@@ -1,6 +1,6 @@
 module github.com/niklak/httpbulb
 
-go 1.22.1
+go 1.18
 
 require (
 	github.com/andybalholm/brotli v1.1.0
