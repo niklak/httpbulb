@@ -37,7 +37,7 @@ func ImageAcceptHandle(w http.ResponseWriter, r *http.Request) {
 	cut := "image/"
 	var found bool
 	if _, accept, found = strings.Cut(accept, cut); !found {
-		JsonError(w, "Client did not request a supported media type.", http.StatusNotAcceptable)
+		RenderError(w, "Client did not request a supported media type.", http.StatusNotAcceptable)
 		return
 	}
 
@@ -55,7 +55,7 @@ func ImageAcceptHandle(w http.ResponseWriter, r *http.Request) {
 	case "*":
 		imgPath = "assets/images/im.png"
 	default:
-		JsonError(w, "Client did not request a supported media type.", http.StatusNotAcceptable)
+		RenderError(w, "Client did not request a supported media type.", http.StatusNotAcceptable)
 		return
 	}
 	serveFileFS(w, r, assetsFS, imgPath)

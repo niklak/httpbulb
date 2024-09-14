@@ -20,7 +20,7 @@ func StatusCodeHandle(w http.ResponseWriter, r *http.Request) {
 	rawStatusCodes, err = url.PathUnescape(rawStatusCodes)
 
 	if err != nil {
-		JsonError(w, err.Error(), http.StatusBadRequest)
+		RenderError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -32,13 +32,13 @@ func StatusCodeHandle(w http.ResponseWriter, r *http.Request) {
 		var code int
 		code, err = strconv.Atoi(part)
 		if err != nil {
-			JsonError(w, err.Error(), http.StatusBadRequest)
+			RenderError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		// skipping 1xx codes
 		if code < 200 || code > 599 {
-			JsonError(w, "status codes must be between 200 and 599", http.StatusBadRequest)
+			RenderError(w, "status codes must be between 200 and 599", http.StatusBadRequest)
 			return
 		}
 		codes = append(codes, code)
@@ -52,7 +52,7 @@ func StatusCodeHandle(w http.ResponseWriter, r *http.Request) {
 		statusText = "UNKNOWN"
 	}
 
-	writeJsonResponse(
+	RenderResponse(
 		w, statusCode,
 		StatusResponse{StatusText: statusText},
 	)

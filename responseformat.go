@@ -24,7 +24,7 @@ func GzipHandle(w http.ResponseWriter, r *http.Request) {
 
 	response, err := newMethodResponse(r)
 	if err != nil {
-		JsonError(w, err.Error(), http.StatusInternalServerError)
+		RenderError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -35,7 +35,7 @@ func GzipHandle(w http.ResponseWriter, r *http.Request) {
 
 	enc := json.NewEncoder(gz)
 	if err = enc.Encode(response); err != nil {
-		JsonError(w, err.Error(), http.StatusInternalServerError)
+		RenderError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	gz.Close()
@@ -54,7 +54,7 @@ func DeflateHandle(w http.ResponseWriter, r *http.Request) {
 
 	response, err := newMethodResponse(r)
 	if err != nil {
-		JsonError(w, err.Error(), http.StatusInternalServerError)
+		RenderError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -65,7 +65,7 @@ func DeflateHandle(w http.ResponseWriter, r *http.Request) {
 
 	enc := json.NewEncoder(zl)
 	if err = enc.Encode(response); err != nil {
-		JsonError(w, err.Error(), http.StatusInternalServerError)
+		RenderError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	zl.Close()
@@ -84,7 +84,7 @@ func BrotliHandle(w http.ResponseWriter, r *http.Request) {
 
 	response, err := newMethodResponse(r)
 	if err != nil {
-		JsonError(w, err.Error(), http.StatusInternalServerError)
+		RenderError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -95,7 +95,7 @@ func BrotliHandle(w http.ResponseWriter, r *http.Request) {
 
 	enc := json.NewEncoder(br)
 	if err = enc.Encode(response); err != nil {
-		JsonError(w, err.Error(), http.StatusInternalServerError)
+		RenderError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	br.Close()

@@ -107,7 +107,7 @@ func DigestAuthHandle(w http.ResponseWriter, r *http.Request) {
 	if requireCookie && getCookie(r, "fake") != "fake_value" {
 		// 403 response
 		setCookie(w, "fake", "fake_value", secureCookie)
-		JsonError(w, "missing cookie set on challenge", http.StatusForbidden)
+		RenderError(w, "missing cookie set on challenge", http.StatusForbidden)
 		return
 	}
 
@@ -138,7 +138,7 @@ func DigestAuthHandle(w http.ResponseWriter, r *http.Request) {
 		setCookie(w, "stale_after", nextStaleAfterValue(staleAfterValue), secureCookie)
 	}
 	setCookie(w, "fake", "fake_value", secureCookie)
-	writeJsonResponse(w, http.StatusOK, AuthResponse{Authenticated: true, User: user})
+	RenderResponse(w, http.StatusOK, AuthResponse{Authenticated: true, User: user})
 
 }
 

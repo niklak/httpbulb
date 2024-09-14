@@ -25,11 +25,11 @@ func BearerAuthHandle(w http.ResponseWriter, r *http.Request) {
 	authorization := r.Header.Get("Authorization")
 	if !strings.HasPrefix(authorization, authPrefix) {
 		w.Header().Set("WWW-Authenticate", `Bearer"`)
-		JsonError(w, "", http.StatusUnauthorized)
+		RenderError(w, "", http.StatusUnauthorized)
 		return
 	}
 	token := authorization[len(authPrefix):]
-	writeJsonResponse(w, http.StatusOK, AuthResponse{Authenticated: true, Token: token})
+	RenderResponse(w, http.StatusOK, AuthResponse{Authenticated: true, Token: token})
 }
 
 func basicAuthHandle(w http.ResponseWriter, r *http.Request, errCode int) {
@@ -42,10 +42,10 @@ func basicAuthHandle(w http.ResponseWriter, r *http.Request, errCode int) {
 
 	if !ok || !authenticated {
 		w.Header().Set("WWW-Authenticate", `Basic realm="httpbulb"`)
-		JsonError(w, "", errCode)
+		RenderError(w, "", errCode)
 		return
 	}
 
-	writeJsonResponse(w, http.StatusOK, AuthResponse{Authenticated: true, User: user})
+	RenderResponse(w, http.StatusOK, AuthResponse{Authenticated: true, User: user})
 
 }

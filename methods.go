@@ -83,9 +83,9 @@ func MethodsHandle(w http.ResponseWriter, r *http.Request) {
 
 	response, err := newMethodResponse(r)
 	if err != nil {
-		JsonError(w, err.Error(), http.StatusInternalServerError)
+		RenderError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	writeJsonResponse(w, http.StatusOK, response)
+	RenderResponse(w, http.StatusOK, response)
 }

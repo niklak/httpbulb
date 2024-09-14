@@ -21,7 +21,7 @@ func Base64DecodeHandle(w http.ResponseWriter, r *http.Request) {
 	decoded, err := base64.URLEncoding.DecodeString(value)
 
 	if err != nil {
-		JsonError(w, err.Error(), http.StatusBadRequest)
+		RenderError(w, err.Error(), http.StatusBadRequest)
 		return
 
 	}
@@ -38,7 +38,7 @@ func StreamNMessagesHandle(w http.ResponseWriter, r *http.Request) {
 	nParam := chi.URLParam(r, "n")
 	totalMessages, err := strconv.Atoi(nParam)
 	if err != nil {
-		JsonError(w, err.Error(), http.StatusBadRequest)
+		RenderError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -72,7 +72,7 @@ func DelayHandle(w http.ResponseWriter, r *http.Request) {
 	delayParam := chi.URLParam(r, "delay")
 	d, err := strconv.Atoi(delayParam)
 	if err != nil {
-		JsonError(w, err.Error(), http.StatusBadRequest)
+		RenderError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -86,10 +86,10 @@ func DelayHandle(w http.ResponseWriter, r *http.Request) {
 	resp, err := newMethodResponse(r)
 
 	if err != nil {
-		JsonError(w, err.Error(), http.StatusInternalServerError)
+		RenderError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	writeJsonResponse(w, http.StatusOK, resp)
+	RenderResponse(w, http.StatusOK, resp)
 
 }
 
@@ -169,7 +169,7 @@ func StreamRandomBytesHandle(w http.ResponseWriter, r *http.Request) {
 
 // UUIDHandle returns a new UUID version 4
 func UUIDHandle(w http.ResponseWriter, r *http.Request) {
-	writeJsonResponse(w, http.StatusOK, &UUIDResponse{UUID: uuid.New().String()})
+	RenderResponse(w, http.StatusOK, &UUIDResponse{UUID: uuid.New().String()})
 }
 
 // DripHandle drips data over a duration after an optional initial delay
@@ -191,7 +191,7 @@ func DripHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if code < 200 || code > 599 {
-		JsonError(w, "code: status code must be between 200 and 599", http.StatusBadRequest)
+		RenderError(w, "code: status code must be between 200 and 599", http.StatusBadRequest)
 		return
 	}
 
@@ -201,7 +201,7 @@ func DripHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if numBytes <= 0 {
-		JsonError(w, "numbytes: number of bytes must be positive", http.StatusBadRequest)
+		RenderError(w, "numbytes: number of bytes must be positive", http.StatusBadRequest)
 		return
 	}
 	// set max limit to 10MB
@@ -238,7 +238,7 @@ func LinkPageHandle(w http.ResponseWriter, r *http.Request) {
 	nParam := chi.URLParam(r, "n")
 	n, err := strconv.Atoi(nParam)
 	if err != nil {
-		JsonError(w, err.Error(), http.StatusBadRequest)
+		RenderError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -248,7 +248,7 @@ func LinkPageHandle(w http.ResponseWriter, r *http.Request) {
 
 	offset, err := strconv.Atoi(offsetParam)
 	if err != nil {
-		JsonError(w, err.Error(), http.StatusBadRequest)
+		RenderError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

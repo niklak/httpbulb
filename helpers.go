@@ -2,8 +2,6 @@ package httpbulb
 
 import (
 	"embed"
-	"encoding/json"
-	"fmt"
 	"io/fs"
 	"net/http"
 	"strings"
@@ -20,22 +18,6 @@ var xRealIP = "X-Real-IP"
 
 //go:embed assets/*
 var assetsFS embed.FS
-
-// TextError is a shortcut func for writing an error in `text/plain`
-func TextError(w http.ResponseWriter, err string, code int) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(code)
-	fmt.Fprintln(w, err)
-}
-
-// JsonError is a shortcut func for writing an error in `application/json`
-func JsonError(w http.ResponseWriter, err string, code int) {
-
-	if err == "" {
-		err = http.StatusText(code)
-	}
-	writeJsonResponse(w, code, &ErrorResponse{Error: err})
-}
 
 func getURLScheme(r *http.Request) string {
 	if scheme := r.Header.Get("X-Forwarded-Proto"); scheme != "" {
@@ -73,19 +55,11 @@ func getIP(r *http.Request) string {
 	}
 	return ip
 }
+
 func getRequestHeader(r *http.Request) http.Header {
 	h := r.Header.Clone()
 	h.Set("Host", r.Host)
 	return h
-}
-
-func writeJsonResponse(w http.ResponseWriter, code int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	enc.Encode(data)
 }
 
 // serveFileFS serves a file from the given filesystem

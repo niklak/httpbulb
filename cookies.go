@@ -19,7 +19,7 @@ func CookiesHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := CookiesResponse{Cookies: respCookies}
-	writeJsonResponse(w, http.StatusOK, resp)
+	RenderResponse(w, http.StatusOK, resp)
 }
 
 // SetCookiesHandle sets the cookies passed from the query parameters,
@@ -79,5 +79,5 @@ func DeleteCookiesHandle(w http.ResponseWriter, r *http.Request) {
 func CookiesListHandle(w http.ResponseWriter, r *http.Request) {
 
 	resp := CookiesListResponse{Cookies: r.Cookies()}
-	writeJsonResponse(w, http.StatusOK, resp)
+	RenderResponse(w, http.StatusOK, resp)
 }

@@ -1,14 +1,14 @@
 module github.com/niklak/httpbulb
 
-go 1.18
+go 1.22.1
 
 require (
 	github.com/andybalholm/brotli v1.1.0
-	github.com/caarlos0/env/v11 v11.1.0
-	github.com/go-chi/chi/v5 v5.0.12
+	github.com/caarlos0/env/v11 v11.2.2
+	github.com/go-chi/chi/v5 v5.1.0
 	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
+	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948
 )
 
 require (
