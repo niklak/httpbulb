@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine as build
+FROM golang:1.25-alpine AS build
 
 
 ENV APP_ROOT=/httpbulb
@@ -10,7 +10,7 @@ WORKDIR ${APP_ROOT}/cmd/bulb
 RUN go build -o ${APP_NAME}
 
 
-FROM alpine:3.20
+FROM alpine:3.22
 
 RUN apk add --no-cache \
 	ca-certificates 
