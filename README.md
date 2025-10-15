@@ -18,7 +18,7 @@ It is useful for testing purposes. **Actually**, it was created to work with `ht
 > This handler follows the original `httpbin` API but in some cases it is more strict.
 ## Requirements
 
-Go 1.18
+Go 1.22
 
 ## Installation
 `
