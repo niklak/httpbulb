@@ -1,24 +1,30 @@
-FROM golang:1.25-alpine AS build
+FROM --platform=$BUILDPLATFORM golang:1.26.2 AS build
 
+ARG GOARCH
+ENV GOARCH=$GOARCH
+ARG GOOS
+ENV GOOS=$GOOS
 
 ENV APP_ROOT=/httpbulb
-ENV APP_NAME=bulb_server
+ENV APP_NAME=httpbulb
+ENV SERVER_HOST=0.0.0.0
 
-COPY . ${APP_ROOT}
+WORKDIR ${APP_ROOT}
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
 WORKDIR ${APP_ROOT}/cmd/bulb
 
-RUN go build -o ${APP_NAME}
+RUN CGO_ENABLED=0 go build -o ${APP_NAME}
 
 
-FROM alpine:3.22
+FROM gcr.io/distroless/static-debian13
 
-RUN apk add --no-cache \
-	ca-certificates 
 
-RUN adduser -D httpbulb
+COPY  --from=build /httpbulb/cmd/bulb/httpbulb /usr/local/bin/httpbulb
 
-COPY --chown=httpbulb:httpbulb --from=build /httpbulb/cmd/bulb/bulb_server /usr/local/bin/bulb_server
+USER 65532:65532
 
-USER httpbulb
-
-CMD ["bulb_server"]
+ENTRYPOINT ["httpbulb"]
