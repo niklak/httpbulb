@@ -1,7 +1,6 @@
 services:
   httpbulb:
-    image: httpbulb:test
-    #image: ghcr.io/niklak/httpbulb:latest
+    image: ghcr.io/niklak/httpbulb:latest
     restart: unless-stopped
     ports:
       - 8080:8080
