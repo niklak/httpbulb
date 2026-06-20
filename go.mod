@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/andybalholm/brotli v1.2.0
 	github.com/caarlos0/env/v11 v11.3.1
-	github.com/go-chi/chi/v5 v5.2.3
+	github.com/go-chi/chi/v5 v5.2.4
 	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.11.1
 )
